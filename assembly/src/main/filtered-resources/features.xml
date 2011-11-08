@@ -135,11 +135,13 @@
     <bundle>mvn:org.apache.aries.jndi/org.apache.aries.jndi/${aries.jndi.version}</bundle>
     <bundle>mvn:org.openengsb.infrastructure/org.openengsb.infrastructure.jpa/${project.version}</bundle>
     <bundle>mvn:com.mysema.codegen/codegen/${codegen.version}</bundle>
+    
     <bundle>mvn:org.openengsb.wrapped/org.apache.commons.collections15/${collections15.wrapped.version}</bundle>
     <bundle>mvn:com.mysema.querydsl/querydsl-core/${querydsl.version}</bundle>
     <bundle>mvn:com.mysema.querydsl/querydsl-apt/${querydsl.version}</bundle>
     <bundle>mvn:com.mysema.querydsl/querydsl-sql/${querydsl.version}</bundle>
     <bundle>mvn:com.mysema.querydsl/querydsl-jpa/${querydsl.version}</bundle>
+    <bundle>mvn:com.mysema.commons/mysema-commons-lang/${mysema.commons.version}</bundle>
 
     <!-- OpenEngSB Core Features -->
     <bundle>mvn:org.openengsb.framework/org.openengsb.framework.api/${project.version}</bundle>
