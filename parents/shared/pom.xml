@@ -252,10 +252,12 @@
     <aries.jpa.version>0.3</aries.jpa.version>
     <aries.jndi.version>0.3</aries.jndi.version>
     <aries.transaction.version>0.3</aries.transaction.version>
-    <querydsl.version>2.2.4</querydsl.version>
-    <codegen.version>0.4.3</codegen.version>
+    <querydsl.version>2.3.0</querydsl.version>
+    <codegen.version>0.4.5</codegen.version>
     <mysema.commons.version>0.2.2</mysema.commons.version>
     <collections15.wrapped.version>4.01.w1</collections15.wrapped.version>
+    <commons.lang3.version>3.1</commons.lang3.version>
+    <servicemix.cglib.version>2.2_2</servicemix.cglib.version>
   </properties>
 
   <dependencyManagement>
@@ -393,6 +395,11 @@
         <version>${commons.compress.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons.lang3.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.fileinstall</artifactId>
         <version>${felix.fileinstall.version}</version>
@@ -468,6 +475,11 @@
         <groupId>org.apache.servicemix.bundles</groupId>
         <artifactId>org.apache.servicemix.bundles.commons-dbcp</artifactId>
         <version>${servicemix.dbcp.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.servicemix.bundles</groupId>
+        <artifactId>org.apache.servicemix.bundles.cglib</artifactId>
+        <version>${servicemix.cglib.version}</version>
       </dependency>
       <dependency>
         <groupId>org.ops4j.pax.wicket</groupId>
