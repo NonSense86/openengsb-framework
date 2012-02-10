@@ -39,20 +39,19 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Setup to run this app:
- *
+ * 
  * + Start OpenEngSB
- *
+ * 
  * + install the jms-feature: features:install openengsb-ports-jms
- *
+ * 
  * + copy example+external-connector-proxy+example-remote.connector to the openengsb/config-directory
- *
+ * 
  * + copy openengsb/etc/keys/public.key.data to src/main/resources
  */
 public final class SecureSampleConnector {
 
     private static final String registerMessage =
-        ""
-                + "{\n"
+        "{\n"
                 + "  \"principal\" : \"admin\",\n"
                 + "  \"credentials\" : {\n"
                 + "    \"className\" : \"org.openengsb.connector.usernamepassword.Password\",\n"
@@ -92,36 +91,36 @@ public final class SecureSampleConnector {
                 + "}\n";
 
     private static final String unregisterMessage = ""
-                + "{\n"
-                + "  \"principal\" : \"admin\",\n"
-                + "  \"credentials\" : {\n"
-                + "    \"className\" : \"org.openengsb.connector.usernamepassword.Password\",\n"
-                + "    \"data\" : {\n"
-                + "      \"value\" : \"password\"\n"
-                + "    },\n"
-                + "    \"binaryData\" : {\n"
-                + "    }\n"
-                + "  },\n"
-                + "  \"message\" : {\n"
-                + "    \"methodCall\" : {\n"
-                + "      \"classes\" : [ \"org.openengsb.core.api.model.ConnectorId\" ],\n"
-                + "      \"methodName\" : \"delete\",\n"
-                + "      \"realClassImplementation\" : [ \"org.openengsb.core.api.model.ConnectorId\" ],\n"
-                + "      \"args\" : [ {\n"
-                + "        \"domainType\" : \"example\",\n"
-                + "        \"connectorType\" : \"external-connector-proxy\",\n"
-                + "        \"instanceId\" : \"example-remote\"\n"
-                + "      } ],\n"
-                + "      \"metaData\" : {\n"
-                + "        \"serviceId\" : \"connectorManager\"\n"
-                + "      }\n"
-                + "    },\n"
-                + "    \"callId\" : \"963718b8-07bf-4478-af12-b28bd47248b1\",\n"
-                + "    \"answer\" : false,\n"
-                + "    \"destination\" : null\n"
-                + "  },\n"
-                + "  \"timestamp\" : 1322174540600\n"
-                + "}\n";
+            + "{\n"
+            + "  \"principal\" : \"admin\",\n"
+            + "  \"credentials\" : {\n"
+            + "    \"className\" : \"org.openengsb.connector.usernamepassword.Password\",\n"
+            + "    \"data\" : {\n"
+            + "      \"value\" : \"password\"\n"
+            + "    },\n"
+            + "    \"binaryData\" : {\n"
+            + "    }\n"
+            + "  },\n"
+            + "  \"message\" : {\n"
+            + "    \"methodCall\" : {\n"
+            + "      \"classes\" : [ \"org.openengsb.core.api.model.ConnectorId\" ],\n"
+            + "      \"methodName\" : \"delete\",\n"
+            + "      \"realClassImplementation\" : [ \"org.openengsb.core.api.model.ConnectorId\" ],\n"
+            + "      \"args\" : [ {\n"
+            + "        \"domainType\" : \"example\",\n"
+            + "        \"connectorType\" : \"external-connector-proxy\",\n"
+            + "        \"instanceId\" : \"example-remote\"\n"
+            + "      } ],\n"
+            + "      \"metaData\" : {\n"
+            + "        \"serviceId\" : \"connectorManager\"\n"
+            + "      }\n"
+            + "    },\n"
+            + "    \"callId\" : \"963718b8-07bf-4478-af12-b28bd47248b1\",\n"
+            + "    \"answer\" : false,\n"
+            + "    \"destination\" : null\n"
+            + "  },\n"
+            + "  \"timestamp\" : 1322174540600\n"
+            + "}\n";
 
     static final Logger LOGGER = LoggerFactory.getLogger(SecureSampleConnector.class);
     private static final String URL = "failover:(tcp://localhost:6549)?timeout=60000";

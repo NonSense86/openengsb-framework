@@ -18,6 +18,7 @@
 package org.openengsb.itests.exam;
 
 import static junit.framework.Assert.assertFalse;
+
 import static org.junit.Assert.assertTrue;
 
 import java.io.PrintStream;
@@ -85,7 +86,7 @@ public class ConsoleIT extends AbstractPreConfiguredExamTestHelper {
         List<String> result = outputStreamHelper.getResult();
         assertTrue(contains(result, "AuditingDomain", "Domain to auditing tools in the OpenEngSB system."));
         assertTrue(contains(result, "Example Domain",
-                "This domain is provided as an example for all developers. It should not be used in production."));
+            "This domain is provided as an example for all developers. It should not be used in production."));
     }
 
     @Test
@@ -98,9 +99,9 @@ public class ConsoleIT extends AbstractPreConfiguredExamTestHelper {
 
         Bundle b = getInstalledBundle("org.openengsb.framework.console");
         b.start();
-        
+
         waitForDefaultConnectors();
-        
+
         cs.execute("openengsb:service list");
         cs.close();
 
@@ -110,14 +111,14 @@ public class ConsoleIT extends AbstractPreConfiguredExamTestHelper {
         assertTrue(contains(result, "auditing+memoryauditing+auditing-root", "ONLINE"));
         assertTrue(contains(result, "authorization+composite-connector+root-authorizer", "ONLINE"));
         assertTrue(contains(result, "Example Domain",
-                "This domain is provided as an example for all developers. It should not be used in production."));
+            "This domain is provided as an example for all developers. It should not be used in production."));
     }
 
-	private void waitForDefaultConnectors() {
-		getOsgiService(AuditingDomain.class);
+    private void waitForDefaultConnectors() {
+        getOsgiService(AuditingDomain.class);
         getOsgiService(AuthenticationDomain.class, "(id=authentication+composite-connector+root-authenticator)", 30000);
         getOsgiService(AuthorizationDomain.class, "(id=authorization+composite-connector+root-authorizer)", 30000);
-	}
+    }
 
     @Test
     public void testDeleteCommand_serviceShouldNotBeAvailableAfterwards() throws Exception {
@@ -129,7 +130,7 @@ public class ConsoleIT extends AbstractPreConfiguredExamTestHelper {
         CommandSession cs = cp.createSession(System.in, out, System.err);
 
         waitForDefaultConnectors();
-        
+
         Bundle b = getInstalledBundle("org.openengsb.framework.console");
         b.start();
         cs.execute("openengsb:service -f true delete authentication+composite-connector+root-authenticator ");
@@ -140,7 +141,6 @@ public class ConsoleIT extends AbstractPreConfiguredExamTestHelper {
         assertFalse(contains(result, "authentication+composite-connector+root-authenticator", "ONLINE"));
 
     }
-
 
     private boolean contains(List<String> list, String value, String value2) {
         for (String s : list) {
