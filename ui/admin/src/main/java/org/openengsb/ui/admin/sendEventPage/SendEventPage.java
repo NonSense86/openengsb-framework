@@ -50,6 +50,7 @@ import org.openengsb.core.api.security.annotation.SecurityAttribute;
 import org.openengsb.core.api.workflow.RuleManager;
 import org.openengsb.core.api.workflow.WorkflowException;
 import org.openengsb.core.api.workflow.WorkflowService;
+import org.openengsb.core.common.util.ModelUtils;
 import org.openengsb.domain.auditing.AuditingDomain;
 import org.openengsb.ui.admin.basePage.BasePage;
 import org.openengsb.ui.admin.ruleEditorPanel.RuleEditorPanel;
@@ -205,7 +206,7 @@ public class SendEventPage extends BasePage implements RuleManagerProvider {
 
     private Event buildEvent(Class<?> eventClass, Map<String, String> values) {
         try {
-            Event obj = (Event) eventClass.newInstance();
+            Event obj = (Event) ModelUtils.createModelObject(eventClass);
             BeanInfo beanInfo = Introspector.getBeanInfo(eventClass);
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
             for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {

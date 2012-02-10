@@ -60,7 +60,8 @@ public final class ModelUtils {
      */
     public static Object createModelObject(Class<?> model, OpenEngSBModelEntry... entries) {
         if (!OpenEngSBModel.class.isAssignableFrom(model)) {
-            throw new IllegalArgumentException("OpenEngSBModel has to be deriveable from model parameter");
+            throw new IllegalArgumentException("OpenEngSBModel has to be deriveable from model parameter. ModelType: "
+                    + model.getSimpleName());
         }
         ClassLoader classLoader = model.getClassLoader();
         Class<?>[] classes = new Class<?>[]{ OpenEngSBModel.class, model };

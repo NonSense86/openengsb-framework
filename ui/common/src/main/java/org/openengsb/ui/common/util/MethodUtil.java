@@ -42,6 +42,7 @@ import org.openengsb.core.api.descriptor.AttributeDefinition.Builder;
 import org.openengsb.core.api.ekb.EngineeringKnowledgeBaseService;
 import org.openengsb.core.api.l10n.PassThroughStringLocalizer;
 import org.openengsb.core.api.model.OpenEngSBModel;
+import org.openengsb.core.common.util.ModelUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,8 +52,6 @@ import com.google.common.collect.Maps;
 
 public final class MethodUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodUtil.class);
-
-    private static EngineeringKnowledgeBaseService ekbService;
     private static DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public static Class<?>[] getAllInterfaces(Object serviceObject) {
@@ -71,6 +70,11 @@ public final class MethodUtil {
         try {
             BeanInfo beanInfo = Introspector.getBeanInfo(theClass);
             PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
+            if (OpenEngSBModel.class.isAssignableFrom(theClass) && !theClass.equals(OpenEngSBModel.class)) {
+                for (Class<?> iface : theClass.getInterfaces()) {
+                    attributes.addAll(buildAttributesList(iface));
+                }
+            }
             for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
                 if (propertyDescriptor.getWriteMethod() == null
                         || !Modifier.isPublic(propertyDescriptor.getWriteMethod().getModifiers())) {
@@ -104,9 +108,8 @@ public final class MethodUtil {
         try {
             Object obj = null;
 
-            if (beanClass.isInterface()) {
-                Class<? extends OpenEngSBModel> model = (Class<? extends OpenEngSBModel>) beanClass;
-                obj = ekbService.createEmptyModelObject(model);
+            if (OpenEngSBModel.class.isAssignableFrom(beanClass)) {
+                obj = ModelUtils.createModelObject(beanClass);
             } else {
                 obj = beanClass.newInstance();
             }
@@ -187,7 +190,7 @@ public final class MethodUtil {
     }
 
     public enum TestEnum {
-            a, b, c
+        a, b, c
     }
 
     public static Object convertToCorrectClass(Class<?> type, Object value) {
@@ -243,7 +246,6 @@ public final class MethodUtil {
     }
 
     public void setEkbService(EngineeringKnowledgeBaseService ekbService) {
-        MethodUtil.ekbService = ekbService;
     }
 
 }
