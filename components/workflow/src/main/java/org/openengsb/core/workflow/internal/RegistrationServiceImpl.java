@@ -38,8 +38,7 @@ public class RegistrationServiceImpl extends AbstractOpenEngSBService implements
 
     private static final String EVENT_REGISTRATION_RULE_TEMPLATE = "when event : %s\n"
             + "then\n"
-            + "RemoteEvent re = (RemoteEvent)ModelUtils.createEmptyModelObject(RemoteEvent.class"
-            + ", new OpenEngSBModelEntry[]{});\n"
+            + "RemoteEvent re = (RemoteEvent)ModelUtils.createEmptyModelObject(RemoteEvent.class);\n"
             + "re.setType(event.getType());\n"
             + "%s\n";
     private static final String OSGI_HELPER_TEMPLATE1 = "OsgiHelper.sendRemoteEvent(\"%s\", \"%s\", re);";

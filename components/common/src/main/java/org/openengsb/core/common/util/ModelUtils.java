@@ -44,9 +44,19 @@ public final class ModelUtils {
 
     private ModelUtils() {
     }
-
+    
     /**
      * Creates a proxy for the model interface which simulates an implementation of the interface.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends OpenEngSBModel> T createEmptyModelObject(Class<T> model) {
+        LOGGER.debug("createEmpytModelObject for model interface {} called", model.getName());
+        return (T) createModelObject(model);
+    }
+
+    /**
+     * Creates a proxy for the model interface which simulates an implementation of the interface. Uses the given
+     * entries as initialization data.
      */
     @SuppressWarnings("unchecked")
     public static <T extends OpenEngSBModel> T createEmptyModelObject(Class<T> model, OpenEngSBModelEntry... entries) {
