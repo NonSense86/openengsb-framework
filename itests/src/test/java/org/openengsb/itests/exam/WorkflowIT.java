@@ -120,7 +120,9 @@ public class WorkflowIT extends AbstractPreConfiguredExamTestHelper {
         WorkflowService workflowService = getOsgiService(WorkflowService.class);
 
         authenticate("admin", "password");
-        workflowService.processEvent(ModelUtils.createEmptyModelObject(LogEvent.class));
+        LogEvent event = ModelUtils.createEmptyModelObject(LogEvent.class);
+        event.setType(LogEvent.class.getSimpleName());
+        workflowService.processEvent(event);
 
         assertThat(exampleMock.wasCalled, is(true));
     }
@@ -153,6 +155,7 @@ public class WorkflowIT extends AbstractPreConfiguredExamTestHelper {
         WorkflowService workflowService = getOsgiService(WorkflowService.class);
         LogEvent event = ModelUtils.createEmptyModelObject(LogEvent.class);
         event.setOrigin("example2");
+        event.setType(LogEvent.class.getSimpleName());
         authenticateAsAdmin();
         workflowService.processEvent(event);
 
