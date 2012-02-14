@@ -220,12 +220,15 @@ public class EDBIT extends AbstractExamTestHelper {
         model.setName("blab");
         EDBBatchEvent e = ModelUtils.createEmptyModelObject(EDBBatchEvent.class);
         enrichEDBEvent(e);
-        e.getUpdates().add(model);
+        List<OpenEngSBModel> updates = new ArrayList<OpenEngSBModel>();
+        updates.add(model);
+        e.setUpdates(updates);
         TestModel model2 = ModelUtils.createEmptyModelObject(TestModel.class);
         model2.setName("blob");
         model2.setEdbId("batchevent/2");
-
-        e.getInserts().add(model2);
+        List<OpenEngSBModel> inserts = new ArrayList<OpenEngSBModel>();
+        inserts.add(model2);
+        e.setInserts(inserts);
 
         edbService.processEDBBatchEvent(e);
 
