@@ -95,7 +95,7 @@ public abstract class AbstractWorkflowServiceTest extends AbstractOsgiMockServic
         RuleUtil.addHello1Rule(manager);
         RuleUtil.addTestFlows(manager);
         manager.add(new RuleBaseElementId(RuleBaseElementType.Rule, "logtest"),
-            "when\n Event ( name == \"test-context\")\n then \n example.doSomething(\"42\");");
+            "when\n EventWrapper ( name == \"test-context\")\n then \n example.doSomething(\"42\");");
     }
 
     private void setupDomainsAndOtherServices() throws Exception {

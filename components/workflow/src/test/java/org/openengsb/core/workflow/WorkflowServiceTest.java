@@ -106,7 +106,7 @@ public class WorkflowServiceTest extends AbstractWorkflowServiceTest {
     @Test
     public void testUpdateRule() throws Exception {
         manager.update(new RuleBaseElementId(RuleBaseElementType.Rule, "hello1"),
-            "when\n Event ( name == \"test-context\")\n then \n example.doSomething(\"21\");");
+            "when\n EventWrapper ( name == \"test-context\")\n then \n example.doSomething(\"21\");");
         Event event = ModelUtils.createEmptyModelObject(Event.class);
         event.setName("test-context");
         service.processEvent(event);
@@ -250,7 +250,7 @@ public class WorkflowServiceTest extends AbstractWorkflowServiceTest {
 
     @Test
     public void testStartWorkflowTriggeredByEvent() throws Exception {
-        manager.add(new RuleBaseElementId(RuleBaseElementType.Rule, "test42"), "when\n" + "  Event()\n" + "then\n"
+        manager.add(new RuleBaseElementId(RuleBaseElementType.Rule, "test42"), "when\n EventWrapper()\n then\n"
                 + "  kcontext.getKnowledgeRuntime().startProcess(\"ci\");\n");
         service.processEvent(ModelUtils.createEmptyModelObject(Event.class));
         assertThat(service.getRunningFlows().isEmpty(), is(false));
@@ -339,11 +339,13 @@ public class WorkflowServiceTest extends AbstractWorkflowServiceTest {
     public void processEventsConcurrently_shouldProcessBothEvents() throws Exception {
         manager.addImport(TestEvent.class.getName());
         manager.add(new RuleBaseElementId(RuleBaseElementType.Rule, "concurrent test"), "when\n"
-                + "TestEvent(value == \"0\")\n"
+                + "e : EventWrapper(type==\"TestEvent\")\n"
+                + "eval(e.getProperty(\"value\") == \"1\")\n"
                 + "then\n"
                 + "example.doSomething(\"concurrent\");");
         manager.add(new RuleBaseElementId(RuleBaseElementType.Rule, "concurrent test1"), "when\n"
-                + "TestEvent(value == \"1\")\n"
+                + "e : EventWrapper(type==\"TestEvent\")\n"
+                + "eval(e.getProperty(\"value\") == \"0\")\n"
                 + "then\n"
                 + "Thread.sleep(1000);");
 
@@ -432,9 +434,9 @@ public class WorkflowServiceTest extends AbstractWorkflowServiceTest {
         manager.addImport(NullDomain.class.getName());
         manager.add(new RuleBaseElementId(RuleBaseElementType.Rule, "response-test"), ""
                 + "when\n"
-                + "   e : Event()\n"
+                + "   e : EventWrapper()\n"
                 + "then\n"
-                + "   NullDomain origin = (NullDomain) OsgiHelper.getResponseProxy(e, NullDomain.class);"
+                + "   NullDomain origin = (NullDomain) OsgiHelper.getResponseProxy(e.getEvent(), NullDomain.class);"
                 + "   origin.nullMethod(42);");
 
         Event event = ModelUtils.createEmptyModelObject(Event.class);
@@ -447,7 +449,7 @@ public class WorkflowServiceTest extends AbstractWorkflowServiceTest {
     public void testTriggerExceptionInEventProcessing_shouldNotKeepLocked() throws Exception {
         manager.add(new RuleBaseElementId(RuleBaseElementType.Rule, "response-test"), ""
                 + "when\n"
-                + "   e : Event(name==\"evil\")\n"
+                + "   e : EventWrapper(name==\"evil\")\n"
                 + "then\n"
                 + "   String testxx = null;"
                 + "   testxx.toString();"); // provoke NPE
@@ -486,7 +488,7 @@ public class WorkflowServiceTest extends AbstractWorkflowServiceTest {
     public void serializeConsequenceException_shouldReturnString() throws Exception {
         manager.add(new RuleBaseElementId(RuleBaseElementType.Rule, "response-test"), ""
                 + "when\n"
-                + "   e : Event(name==\"evil\")\n"
+                + "   e : EventWrapper(name==\"evil\")\n"
                 + "then\n"
                 + "   String testxx = null;"
                 + "   testxx.toString();"); // provoke NPE

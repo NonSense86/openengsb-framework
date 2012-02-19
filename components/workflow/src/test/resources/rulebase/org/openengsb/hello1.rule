@@ -16,7 +16,7 @@
 #
 
 when
-	Event()
+	EventWrapper()
 then
 	example.doSomething("Hello World");
 	notification.notify("Hello");
