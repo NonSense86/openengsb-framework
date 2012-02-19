@@ -70,6 +70,7 @@ import org.openengsb.core.api.workflow.model.RuleBaseElementType;
 import org.openengsb.core.api.workflow.model.Task;
 import org.openengsb.core.common.AbstractOpenEngSBService;
 import org.openengsb.core.common.OpenEngSBCoreServices;
+import org.openengsb.core.common.events.EventWrapper;
 import org.openengsb.core.common.util.ThreadLocalUtil;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Filter;
@@ -101,9 +102,10 @@ public class WorkflowServiceImpl extends AbstractOpenEngSBService implements Wor
     public void processEvent(Event event) throws WorkflowException {
         LOGGER.info("processing Event {} of type {}", event, event.getClass());
         StatefulKnowledgeSession session = getSessionForCurrentContext();
+        EventWrapper wrapper = new EventWrapper(event);
         FactHandle factHandle = null;
         try {
-            factHandle = session.insert(event);
+            factHandle = session.insert(wrapper);
             workflowLock.lock();
             try {
                 session.fireAllRules();
@@ -217,9 +219,13 @@ public class WorkflowServiceImpl extends AbstractOpenEngSBService implements Wor
 
     @Override
     public void registerFlowTriggerEvent(Event event, String... flowIds) throws WorkflowException {
-        String eventName = event.getName();
+        registerFlowTriggerEvent(new EventWrapper(event), flowIds);
+    }
+    
+    private void registerFlowTriggerEvent(EventWrapper wrapper, String... flowIds) throws WorkflowException {
+        String eventName = wrapper.getName();
         String ruleName = String.format("_generated_ trigger %s on %s", Arrays.asList(flowIds), eventName);
-        StringBuffer ruleCode = generateFlowTriggerRule(event, flowIds);
+        StringBuffer ruleCode = generateFlowTriggerRule(wrapper, flowIds);
         LOGGER.info("adding new rule with id: {}", ruleName);
         try {
             rulemanager.add(new RuleBaseElementId(RuleBaseElementType.Rule, ruleName), ruleCode.toString());
@@ -228,10 +234,10 @@ public class WorkflowServiceImpl extends AbstractOpenEngSBService implements Wor
         }
     }
 
-    private StringBuffer generateFlowTriggerRule(Event event, String... flowIds) throws WorkflowException {
+    private StringBuffer generateFlowTriggerRule(EventWrapper event, String... flowIds) throws WorkflowException {
         StringBuffer ruleCode = new StringBuffer();
         ruleCode.append(String.format(FLOW_TRIGGER_RULE_TEMPLATE_START, event.getClass().getName(), event.getName()));
-        addOtherPropertyChecks(event, ruleCode);
+        addOtherPropertyChecks(event.getEvent(), ruleCode);
         for (String flowId : flowIds) {
             ruleCode.append(String.format(START_FLOW_CONSEQUENCE_LINE, flowId));
         }

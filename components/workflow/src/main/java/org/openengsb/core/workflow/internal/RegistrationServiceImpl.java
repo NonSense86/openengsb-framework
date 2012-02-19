@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 public class RegistrationServiceImpl extends AbstractOpenEngSBService implements EventRegistrationService {
 
-    private static final String EVENT_REGISTRATION_RULE_TEMPLATE = "when event : %s\n"
+    private static final String EVENT_REGISTRATION_RULE_TEMPLATE = "when %s\n"
             + "then\n"
             + "RemoteEvent re = (RemoteEvent)ModelUtils.createEmptyModelObject(RemoteEvent.class);\n"
             + "re.setType(event.getType());\n"
@@ -63,7 +63,8 @@ public class RegistrationServiceImpl extends AbstractOpenEngSBService implements
             } else {
                 osgiHelperStatement = String.format(OSGI_HELPER_TEMPLATE2, portId, returnAddress, serviceId);
             }
-            ruleManager.add(id, String.format(EVENT_REGISTRATION_RULE_TEMPLATE, eventMatcher, osgiHelperStatement));
+            String rule = String.format(EVENT_REGISTRATION_RULE_TEMPLATE, eventMatcher, osgiHelperStatement);
+            ruleManager.add(id, rule);
         } catch (RuleBaseException e) {
             throw new IllegalArgumentException(e);
         }
@@ -85,11 +86,25 @@ public class RegistrationServiceImpl extends AbstractOpenEngSBService implements
 
     private String makeEventMatcher(RemoteEvent event) {
         List<String> matchers = new LinkedList<String>();
+        matchers.add(String.format("type == \"%s\"", event.getClassName()));
+        List<String> evals = new LinkedList<String>();
         Set<Entry<String, String>> entrySet = event.getNestedEventProperties().entrySet();
         for (Entry<String, String> entry : entrySet) {
-            matchers.add(String.format("%s == \"%s\"", entry.getKey(), entry.getValue()));
+            String key = entry.getKey();
+            if (key.equals("type") || key.equals("name") || key.equals("origin") || key.equals("processId")) {
+                matchers.add(String.format("%s == \"%s\"", entry.getKey(), entry.getValue()));
+            } else {
+                evals.add(String.format("event.getProperty(\"%s\") == \"%s\"", entry.getKey(), entry.getValue()));
+            }
         }
-        return event.getClassName() + "(" + StringUtils.join(matchers, ",") + ")";
+        StringBuilder builder = new StringBuilder("event : EventWrapper (");
+        builder.append(StringUtils.join(matchers, ",")).append(")");
+        if (evals.size() != 0) {
+            builder.append("\n eval(");
+            builder.append(StringUtils.join(evals, " && ")).append(")");
+        }
+
+        return builder.toString();
     }
 
     public void setRuleManager(RuleManager ruleManager) {
