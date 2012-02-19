@@ -70,11 +70,11 @@ public class AbstractRemoteTestHelper extends AbstractExamTestHelper {
             + "        }"
             + "    ]"
             + "}";
-
+    
     protected static final String VOID_CALL_STRING = ""
             + "{"
             + "    \"classes\": ["
-            + "        \"" + Event.class.getName() + "\""
+            + "        \"org.openengsb.core.api.model.OpenEngSBModelWrapper\""
             + "    ],"
             + "    \"methodName\": \"audit\","
             + "    \"metaData\": {"
@@ -82,8 +82,10 @@ public class AbstractRemoteTestHelper extends AbstractExamTestHelper {
             + "        \"contextId\": \"foo\""
             + "    },"
             + "    \"args\": ["
-            + "        { \"name\": \"testMessage\" }"
-            + "    ]"
+            + "        { \"entries\":["
+            + "              {\"value\":\"testmessage\", \"key\":\"name\",\"type\":\"java.lang.String\"}],"
+            + "          \"modelClass\":\"" + Event.class.getName() + "\"}],"
+            + "    \"realClassImplementation\":[\"org.openengsb.core.api.model.OpenEngSBModelWrapper\"]"
             + "}";
 
     protected static final String METHOD_CALL_STRING_FILTER = ""

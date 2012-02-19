@@ -34,6 +34,7 @@ import org.openengsb.core.api.workflow.WorkflowService;
 import org.openengsb.core.api.workflow.model.RuleBaseElementId;
 import org.openengsb.core.api.workflow.model.RuleBaseElementType;
 import org.openengsb.core.common.AbstractOpenEngSBService;
+import org.openengsb.core.common.events.EventWrapper;
 import org.openengsb.core.common.util.ModelUtils;
 import org.openengsb.domain.example.ExampleDomain;
 import org.openengsb.domain.example.event.LogEvent;
@@ -107,12 +108,13 @@ public class WorkflowIT extends AbstractPreConfiguredExamTestHelper {
 
         ruleManager.addImport(ExampleDomain.class.getName());
         ruleManager.addImport(LogEvent.class.getName());
+        ruleManager.addImport(EventWrapper.class.getName());
 
         ruleManager.addGlobal(ExampleDomain.class.getName(), "example2");
 
         ruleManager.add(new RuleBaseElementId(RuleBaseElementType.Rule, "example-trigger"), ""
                 + "when\n" 
-                + "    l : LogEvent()\n" 
+                + "    l : EventWrapper(type == \"LogEvent\")\n" 
                 + "then\n" 
                 + "    example2.doSomething(\"42\");\n");
 
@@ -141,14 +143,16 @@ public class WorkflowIT extends AbstractPreConfiguredExamTestHelper {
 
         ruleManager.addImport(ExampleDomain.class.getName());
         ruleManager.addImport(LogEvent.class.getName());
+        ruleManager.addImport(EventWrapper.class.getName());
 
         ruleManager.addGlobal(ExampleDomain.class.getName(), "example2");
 
         ruleManager.add(new RuleBaseElementId(RuleBaseElementType.Rule, "example-response"), ""
                 + "when\n"
-                + "    l : LogEvent()\n"
+                + "    l : EventWrapper(type == \"LogEvent\")\n" 
                 + "then\n"
-                + "   ExampleDomain origin = (ExampleDomain) OsgiHelper.getResponseProxy(l, ExampleDomain.class);"
+                + "   ExampleDomain origin = (ExampleDomain) OsgiHelper.getResponseProxy(l.getEvent(), \n"
+                + "ExampleDomain.class);"
                 + "   origin.doSomething(\"42\");");
 
         ContextHolder.get().setCurrentContextId("foo");

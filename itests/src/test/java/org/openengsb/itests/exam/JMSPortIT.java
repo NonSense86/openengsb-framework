@@ -19,6 +19,7 @@ package org.openengsb.itests.exam;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -79,6 +80,7 @@ import org.springframework.jms.support.JmsUtils;
 public class JMSPortIT extends AbstractRemoteTestHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JMSPortIT.class);
+    private static final long JMS_RECEIVE_TIMEOUT = 2500;
 
     @Configuration
     public Option[] additionalConfiguration() throws Exception {
@@ -229,7 +231,8 @@ public class JMSPortIT extends AbstractRemoteTestHelper {
                 TextMessage message = session.createTextMessage(msg);
                 message.setJMSReplyTo(tempQueue);
                 producer.send(message);
-                TextMessage response = (TextMessage) consumer.receive(1000);
+                TextMessage response = (TextMessage) consumer.receive(JMS_RECEIVE_TIMEOUT);
+                assertThat("server hasn't answered before timeout", response, notNullValue());
                 assertThat("server should set the value of the correltion ID to the value of the received message id",
                         response.getJMSCorrelationID(), is(message.getJMSMessageID()));
                 JmsUtils.closeMessageProducer(producer);

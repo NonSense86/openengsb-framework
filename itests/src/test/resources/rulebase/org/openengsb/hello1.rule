@@ -16,6 +16,6 @@
 #
 
 when
-	Event(name == "42")
+	EventWrapper(name == "42")
 then
 	example.doSomething("Hello World");

@@ -119,6 +119,7 @@ public class EventForwardIT extends AbstractPreConfiguredExamTestHelper {
     private void addHelloWorldRule() throws Exception {
         RuleManager ruleManager = getOsgiService(RuleManager.class);
         ruleManager.addImport("org.openengsb.domain.example.ExampleDomain");
+        ruleManager.addImport("org.openengsb.core.common.events.EventWrapper");
 
         ruleManager.addGlobal("org.openengsb.domain.example.ExampleDomain", "example");
 
