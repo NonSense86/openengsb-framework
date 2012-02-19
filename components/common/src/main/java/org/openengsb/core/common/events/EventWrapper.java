@@ -59,7 +59,6 @@ public class EventWrapper {
     
     /**
      * Returns the process id of the wrapped event
-     * @return
      */
     public Long getProcessId() {
         return event.getProcessId();
