@@ -87,23 +87,17 @@ public class RegistrationServiceImpl extends AbstractOpenEngSBService implements
     private String makeEventMatcher(RemoteEvent event) {
         List<String> matchers = new LinkedList<String>();
         matchers.add(String.format("type == \"%s\"", event.getClassName()));
-        List<String> evals = new LinkedList<String>();
         Set<Entry<String, String>> entrySet = event.getNestedEventProperties().entrySet();
         for (Entry<String, String> entry : entrySet) {
             String key = entry.getKey();
             if (key.equals("type") || key.equals("name") || key.equals("origin") || key.equals("processId")) {
                 matchers.add(String.format("%s == \"%s\"", entry.getKey(), entry.getValue()));
             } else {
-                evals.add(String.format("event.getProperty(\"%s\") == \"%s\"", entry.getKey(), entry.getValue()));
+                matchers.add(String.format("event.getProperty(\"%s\") == \"%s\"", entry.getKey(), entry.getValue()));
             }
         }
         StringBuilder builder = new StringBuilder("event : EventWrapper (");
         builder.append(StringUtils.join(matchers, ",")).append(")");
-        if (evals.size() != 0) {
-            builder.append("\n eval(");
-            builder.append(StringUtils.join(evals, " && ")).append(")");
-        }
-
         return builder.toString();
     }
 

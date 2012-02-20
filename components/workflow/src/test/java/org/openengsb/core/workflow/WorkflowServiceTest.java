@@ -339,13 +339,11 @@ public class WorkflowServiceTest extends AbstractWorkflowServiceTest {
     public void processEventsConcurrently_shouldProcessBothEvents() throws Exception {
         manager.addImport(TestEvent.class.getName());
         manager.add(new RuleBaseElementId(RuleBaseElementType.Rule, "concurrent test"), "when\n"
-                + "e : EventWrapper(type==\"TestEvent\")\n"
-                + "eval(e.getProperty(\"value\") == \"1\")\n"
+                + "e : EventWrapper(type==\"TestEvent\", e.getProperty(\"value\") == \"1\")\n"
                 + "then\n"
                 + "example.doSomething(\"concurrent\");");
         manager.add(new RuleBaseElementId(RuleBaseElementType.Rule, "concurrent test1"), "when\n"
-                + "e : EventWrapper(type==\"TestEvent\")\n"
-                + "eval(e.getProperty(\"value\") == \"0\")\n"
+                + "e : EventWrapper(type==\"TestEvent\", e.getProperty(\"value\") == \"0\")\n"
                 + "then\n"
                 + "Thread.sleep(1000);");
 
