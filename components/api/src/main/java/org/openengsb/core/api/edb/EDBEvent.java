@@ -36,45 +36,4 @@ public interface EDBEvent extends Event {
     String getInstanceId();
     
     void setInstanceId(String instanceId);
-    
-
-    // private String domainId;
-    // private String connectorId;
-    // private String instanceId;
-    //
-    // /**
-    // * parses a full connector id (format <domainType>+<connectorType>+<instanceId>) and sets the corresponding values
-    // * in the event. Example: "scm+git+projectx-main-repo"
-    // */
-    // public void parseConnectorId(String connectorId) {
-    // ConnectorId id = ConnectorId.fromFullId(connectorId);
-    // domainId = id.getDomainType();
-    // connectorId = id.getConnectorType();
-    // instanceId = id.getInstanceId();
-    // }
-    //
-    // public void setDomainId(String domainId) {
-    // this.domainId = domainId;
-    // }
-    //
-    // public String getDomainId() {
-    // return domainId;
-    // }
-    //
-    // public void setConnectorId(String connectorId) {
-    // this.connectorId = connectorId;
-    // }
-    //
-    // public String getConnectorId() {
-    // return connectorId;
-    // }
-    //
-    // public void setInstanceId(String instanceId) {
-    // this.instanceId = instanceId;
-    // }
-    //
-    // public String getInstanceId() {
-    // return instanceId;
-    // }
-
 }

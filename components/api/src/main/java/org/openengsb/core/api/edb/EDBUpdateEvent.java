@@ -27,14 +27,4 @@ public interface EDBUpdateEvent extends EDBEvent {
     OpenEngSBModel getModel();
     
     void setModel(OpenEngSBModel model);
-    //
-    // private OpenEngSBModel model;
-    //
-    // public EDBUpdateEvent(OpenEngSBModel model) {
-    // this.model = model;
-    // }
-    //
-    // public OpenEngSBModel getModel() {
-    // return model;
-    // }
 }

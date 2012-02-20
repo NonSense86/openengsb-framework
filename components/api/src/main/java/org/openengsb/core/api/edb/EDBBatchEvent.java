@@ -39,40 +39,4 @@ public interface EDBBatchEvent extends EDBEvent {
     List<OpenEngSBModel> getDeletes();
     
     void setDeletes(List<OpenEngSBModel> deletes);
-    
-
-    // private List<OpenEngSBModel> inserts;
-    // private List<OpenEngSBModel> updates;
-    // private List<OpenEngSBModel> deletes;
-    //
-    // public EDBBatchEvent() {
-    // inserts = new ArrayList<OpenEngSBModel>();
-    // updates = new ArrayList<OpenEngSBModel>();
-    // deletes = new ArrayList<OpenEngSBModel>();
-    // }
-    //
-    // public void addModelInsert(OpenEngSBModel model) {
-    // inserts.add(model);
-    // }
-    //
-    // public void addModelUpdate(OpenEngSBModel model) {
-    // updates.add(model);
-    // }
-    //
-    // public void addModelDelete(OpenEngSBModel model) {
-    // deletes.add(model);
-    // }
-    //
-    // public List<OpenEngSBModel> getInserts() {
-    // return inserts;
-    // }
-    //
-    // public List<OpenEngSBModel> getUpdates() {
-    // return updates;
-    // }
-    //
-    // public List<OpenEngSBModel> getDeletions() {
-    // return deletes;
-    // }
-
 }

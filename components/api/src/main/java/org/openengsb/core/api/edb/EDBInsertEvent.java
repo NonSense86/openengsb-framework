@@ -27,15 +27,4 @@ public interface EDBInsertEvent extends EDBEvent {
     OpenEngSBModel getModel();
 
     void setModel(OpenEngSBModel model);
-
-    // private OpenEngSBModel model;
-    //
-    // public EDBInsertEvent(OpenEngSBModel model) {
-    // this.model = model;
-    // }
-    //
-    // public OpenEngSBModel getModel() {
-    // return model;
-    // }
-
 }
