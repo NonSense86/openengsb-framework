@@ -49,6 +49,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.openengsb.connector.usernamepassword.Password;
 import org.openengsb.connector.usernamepassword.internal.PasswordCredentialTypeProvider;
+import org.openengsb.core.api.ClassloadingDelegate;
+import org.openengsb.core.api.Constants;
 import org.openengsb.core.api.OsgiUtilsService;
 import org.openengsb.core.api.model.BeanDescription;
 import org.openengsb.core.api.remote.FilterAction;
@@ -58,7 +60,6 @@ import org.openengsb.core.api.remote.MethodCallRequest;
 import org.openengsb.core.api.remote.MethodResult;
 import org.openengsb.core.api.remote.MethodResultMessage;
 import org.openengsb.core.api.remote.RequestHandler;
-import org.openengsb.core.api.security.CredentialTypeProvider;
 import org.openengsb.core.api.security.Credentials;
 import org.openengsb.core.api.security.MessageVerificationFailedException;
 import org.openengsb.core.api.security.PrivateKeySource;
@@ -154,8 +155,8 @@ public abstract class GenericSecurePortTest<EncodingType> extends AbstractOsgiMo
         secureRequestHandler = getSecureRequestHandlerFilterChain();
 
         Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put("credentialClass", Password.class.getName());
-        registerService(new PasswordCredentialTypeProvider(), props, CredentialTypeProvider.class);
+        props.put(Constants.PROVIDED_CLASSES_KEY, Password.class.getName());
+        registerService(new PasswordCredentialTypeProvider(), props, ClassloadingDelegate.class);
     }
 
     private void setupSecurityManager() {
