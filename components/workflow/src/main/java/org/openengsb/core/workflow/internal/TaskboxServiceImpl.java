@@ -90,6 +90,7 @@ public class TaskboxServiceImpl implements TaskboxService {
         InternalWorkflowEvent finishedEvent = ModelUtils.createEmptyModelObject(InternalWorkflowEvent.class);
         finishedEvent.setName("TaskFinished");
         finishedEvent.setProcessBag(task);
+        finishedEvent.setType(InternalWorkflowEvent.class.getSimpleName());
         Task t = Task.createTaskWithAllValuesSetToNull();
         t.setTaskId(task.getTaskId());
 

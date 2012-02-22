@@ -156,13 +156,12 @@ public class TaskboxIT extends AbstractPreConfiguredExamTestHelper {
 
         task.setName("test");
         taskboxService.updateTask(task);
-        assertThat("There aren't enough open tasks - Stage 1", taskboxService.getOpenTasks().size(), not(0));
         task = taskboxService.getOpenTasks().get(0);
         assertEquals("test", task.getName());
 
         taskboxService.finishTask(task);
 
-        assertThat("There aren't enough open tasks - Stage 2", taskboxService.getOpenTasks().size(), not(0));
+        assertThat("There aren't enough open tasks", taskboxService.getOpenTasks().size(), not(0));
         task = taskboxService.getOpenTasks().get(0);
         assertEquals(task.getProperty("test"), date);
         assertEquals(task.getTaskType(), "step2");
