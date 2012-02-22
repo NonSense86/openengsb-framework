@@ -15,17 +15,39 @@
  * limitations under the License.
  */
 
-package org.openengsb.connector.usernamepassword.internal;
+package org.openengsb.core.security;
 
-import org.openengsb.connector.usernamepassword.Password;
-import org.openengsb.core.api.security.Credentials;
-import org.openengsb.core.common.DefaultClassloadingDelegate;
+import org.openengsb.core.api.security.model.AuthenticationToken;
 
-public class PasswordCredentialTypeProvider extends DefaultClassloadingDelegate<Credentials> {
+public class UserOneTimeValue implements AuthenticationToken {
 
-    @SuppressWarnings("unchecked")
-    public PasswordCredentialTypeProvider() {
-        super(Password.class);
+    private String principal;
+    private Integer credentials;
+
+    public UserOneTimeValue() {
+    }
+
+    public UserOneTimeValue(String username, int value) {
+        principal = username;
+        credentials = value;
+    }
+
+    @Override
+    public Integer getCredentials() {
+        return credentials;
+    }
+
+    public void setCredentials(int value) {
+        credentials = value;
+    }
+
+    @Override
+    public String getPrincipal() {
+        return principal;
+    }
+
+    public void setPrincipal(String username) {
+        principal = username;
     }
 
 }

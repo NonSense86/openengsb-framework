@@ -27,7 +27,6 @@ import org.openengsb.core.api.remote.FilterException;
 import org.openengsb.core.api.security.model.SecureRequest;
 import org.openengsb.core.api.security.model.SecureResponse;
 import org.openengsb.core.common.remote.AbstractFilterChainElement;
-import org.openengsb.core.common.util.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +51,7 @@ public class JsonSecureRequestMarshallerFilter extends AbstractFilterChainElemen
 
     private FilterAction next;
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper = new ObjectMapper().enableDefaultTyping();
 
     public JsonSecureRequestMarshallerFilter() {
         super(byte[].class, byte[].class);
@@ -63,6 +62,8 @@ public class JsonSecureRequestMarshallerFilter extends AbstractFilterChainElemen
         SecureRequest request;
         try {
             LOGGER.trace("attempt to read SecureRequest from inputData");
+            System.out.println(new String(input));
+            
             request = mapper.readValue(input, SecureRequest.class);
         } catch (IOException e) {
             throw new FilterException(e);
@@ -70,8 +71,6 @@ public class JsonSecureRequestMarshallerFilter extends AbstractFilterChainElemen
         String callId = request.getMessage().getCallId();
         LOGGER.info("extracted callId \"{}\" from message", callId);
         metaData.put("callId", callId);
-        LOGGER.debug("converting arguments of inputmessage");
-        JsonUtils.convertAllArgs(request.getMessage());
         LOGGER.debug("invoking next filter: {}", next.getClass().getName());
         SecureResponse response = (SecureResponse) next.filter(request, metaData);
         LOGGER.debug("response received for callId {}: {}. serializing to json", callId, response);

@@ -102,7 +102,7 @@ public class PipelineTest {
 
         FilterAction filterChain = filterChainFactory.create();
 
-        MethodCall methodCall = new MethodCall("test", new Object[]{ "foo" }, Arrays.asList(String.class.getName()));
+        MethodCall methodCall = new MethodCall("test", new Object[]{ "foo" });
         MethodCallRequest request = new MethodCallRequest(methodCall, "bar");
 
         JAXBContext jaxbContext = JAXBContext.newInstance(MethodCallRequest.class, MethodResultMessage.class);

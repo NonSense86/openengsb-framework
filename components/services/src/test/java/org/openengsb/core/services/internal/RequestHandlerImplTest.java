@@ -93,7 +93,6 @@ public class RequestHandlerImplTest extends AbstractOsgiMockServiceTest {
         MethodResult result = requestHandler.handleCall(c);
 
         verify(mockService).test(42);
-        assertThat(result.getClassName(), is(Integer.class.getName()));
         assertThat((Integer) result.getArg(), is(21));
     }
 
@@ -108,7 +107,6 @@ public class RequestHandlerImplTest extends AbstractOsgiMockServiceTest {
         MethodResult result = requestHandler.handleCall(c);
 
         verify(mockService).test(42);
-        assertThat(result.getClassName(), is(Integer.class.getName()));
         assertThat((Integer) result.getArg(), is(21));
     }
 
@@ -124,7 +122,6 @@ public class RequestHandlerImplTest extends AbstractOsgiMockServiceTest {
         MethodResult result = requestHandler.handleCall(c);
 
         verify(mockService).test(42);
-        assertThat(result.getClassName(), is(Integer.class.getName()));
         assertThat((Integer) result.getArg(), is(21));
     }
 
@@ -144,7 +141,6 @@ public class RequestHandlerImplTest extends AbstractOsgiMockServiceTest {
         MethodCall c = new MethodCall("test", new Object[]{ 42 }, metaData);
         MethodResult result = requestHandler.handleCall(c);
 
-        assertThat(result.getClassName(), is(Integer.class.getName()));
         assertThat((Integer) result.getArg(), is(43));
     }
 

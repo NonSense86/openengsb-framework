@@ -17,45 +17,34 @@
 
 package org.openengsb.core.api.security.model;
 
-import org.openengsb.core.api.model.BeanDescription;
 import org.openengsb.core.api.remote.MethodCallRequest;
 
 /**
  * serves as a container for a {@link MethodCallRequest} and adds attributes relevant for security. Namely
  * verification-information handled by {@link AbstractSecureMessage} and authenticationInformation.
- *
+ * 
  */
 public class SecureRequest extends AbstractSecureMessage<MethodCallRequest> {
 
     private static final long serialVersionUID = -2350090113804167120L;
 
-    private String principal;
-    private BeanDescription credentials;
+    private Object token;
 
-    public static SecureRequest create(MethodCallRequest original, String principal, BeanDescription credentials) {
+    public static SecureRequest create(MethodCallRequest original, AuthenticationToken token) {
         SecureRequest secureRequest = new SecureRequest();
         secureRequest.setMessage(original);
         long time = System.currentTimeMillis();
         secureRequest.setTimestamp(time);
-        secureRequest.setPrincipal(principal);
-        secureRequest.setCredentials(credentials);
+        secureRequest.setToken(token);
         return secureRequest;
     }
 
-    public String getPrincipal() {
-        return principal;
+    public Object getToken() {
+        return token;
     }
 
-    public void setPrincipal(String principal) {
-        this.principal = principal;
-    }
-
-    public BeanDescription getCredentials() {
-        return credentials;
-    }
-
-    public void setCredentials(BeanDescription credentials) {
-        this.credentials = credentials;
+    public void setToken(Object token) {
+        this.token = token;
     }
 
     protected SecureRequest() {

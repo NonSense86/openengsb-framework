@@ -20,8 +20,6 @@ package org.openengsb.core.services.internal;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -127,7 +125,6 @@ public class RequestHandlerImpl implements RequestHandler {
             } else {
                 returnTemplate.setType(ReturnType.Object);
                 returnTemplate.setArg(result);
-                returnTemplate.setClassName(result.getClass().getName());
             }
         } catch (Exception e) {
             LOGGER.warn("Exception in remote method invocation: ", e);
@@ -137,7 +134,6 @@ public class RequestHandlerImpl implements RequestHandler {
                 // if it's not an Exception we are in REAL trouble anyway
             }
             returnTemplate.setArg(e.getCause());
-            returnTemplate.setClassName(e.getClass().getName());
         }
         return returnTemplate;
     }
@@ -181,16 +177,13 @@ public class RequestHandlerImpl implements RequestHandler {
         return serviceClass;
     }
 
-    private Class<?>[] getArgTypes(MethodCall args) {
-        List<Class<?>> clazzes = new ArrayList<Class<?>>();
-        for (String clazz : args.getClasses()) {
-            try {
-                clazzes.add(this.getClass().getClassLoader().loadClass(clazz));
-            } catch (ClassNotFoundException e) {
-                throw new IllegalArgumentException("The classes defined could not be found", e);
-            }
+    private Class<?>[] getArgTypes(MethodCall call) {
+        Object[] args = call.getArgs();
+        Class<?>[] types = new Class<?>[args.length]; 
+        for(int i = 0; i <args.length; i++){
+            types[i] = args[i].getClass();
         }
-        return clazzes.toArray(new Class<?>[0]);
+        return types;
     }
 
 }

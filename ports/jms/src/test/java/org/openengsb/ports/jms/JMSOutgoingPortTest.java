@@ -62,8 +62,7 @@ public class JMSOutgoingPortTest extends AbstractOsgiMockServiceTest {
             + "   \"message\":{"
             + "      \"result\":{"
             + "         \"type\":\"Object\","
-            + "         \"className\":\"java.lang.String\","
-            + "         \"arg\":\"42\","
+            + "         \"arg\": [ \"42\" ],"
             + "         \"metaData\":{"
             + ""
             + "         }"
@@ -132,8 +131,6 @@ public class JMSOutgoingPortTest extends AbstractOsgiMockServiceTest {
         JsonNode requestMessage = new ObjectMapper().readTree(captor.getValue());
         JsonNode readTree = requestMessage.get("message").get("methodCall");
 
-        assertThat(readTree.get("classes").toString(), Matchers.equalTo("[\"java.lang.String\","
-                + "\"java.lang.Integer\"," + "\"org.openengsb.ports.jms.TestClass\"]"));
         assertThat(readTree.get("methodName").toString(), Matchers.equalTo("\"method\""));
         assertThat(readTree.get("args").toString(), Matchers.equalTo("[\"123\",5,{\"test\":\"test\"}]"));
         assertThat(readTree.get("metaData").toString(), Matchers.equalTo("{\"serviceId\":\"test\"}"));

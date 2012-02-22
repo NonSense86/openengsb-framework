@@ -20,8 +20,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.openengsb.core.api.AliveState;
-import org.openengsb.core.api.security.Credentials;
 import org.openengsb.core.api.security.model.Authentication;
+import org.openengsb.core.api.security.model.AuthenticationToken;
 import org.openengsb.core.common.AbstractDelegateStrategy;
 import org.openengsb.core.common.AbstractOpenEngSBConnectorService;
 import org.openengsb.core.common.OpenEngSBCoreServices;
@@ -36,10 +36,10 @@ import com.google.common.collect.Iterators;
 
 /**
  * CompositeStrategy for {@link AuthenticationDomain} connectors
- *
+ * 
  * Tries all associated connectors if they support the supplied credentials. If so, the connector is chosen to attempt
  * authentication.
- *
+ * 
  * As soon as the first connector can successfully authenticate the user, the result of that authentication is returned.
  */
 public class DefaultAuthenticationProviderStrategy extends AbstractDelegateStrategy {
@@ -55,7 +55,7 @@ public class DefaultAuthenticationProviderStrategy extends AbstractDelegateStrat
         }
 
         @Override
-        public Authentication authenticate(String username, Credentials credentials) throws AuthenticationException {
+        public Authentication authenticate(AuthenticationToken token) throws AuthenticationException {
             Iterator<AuthenticationDomain> serviceIterator =
                 OpenEngSBCoreServices.getServiceUtilsService().getServiceIterator(providers,
                     AuthenticationDomain.class);
@@ -63,10 +63,10 @@ public class DefaultAuthenticationProviderStrategy extends AbstractDelegateStrat
             LOGGER.debug("iterating {} authenticationProviderServices", providers.size());
             while (serviceIterator.hasNext()) {
                 AuthenticationDomain provider = serviceIterator.next();
-                if (provider.supports(credentials)) {
+                if (provider.supports(token.getClass())) {
                     LOGGER.info("attempting authentication using provider {}", provider.getClass());
                     try {
-                        return provider.authenticate(username, credentials);
+                        return provider.authenticate(token);
                     } catch (AuthenticationException e) {
                         lastException = e;
                     }
@@ -75,7 +75,7 @@ public class DefaultAuthenticationProviderStrategy extends AbstractDelegateStrat
 
             if (lastException == null) {
                 lastException =
-                    new AuthenticationException("No AuthenticationProvider found, that supports " + credentials);
+                    new AuthenticationException("No AuthenticationProvider found, that supports " + token.getClass());
             }
             throw lastException;
         }
@@ -86,14 +86,14 @@ public class DefaultAuthenticationProviderStrategy extends AbstractDelegateStrat
         }
 
         @Override
-        public boolean supports(final Credentials credentials) {
+        public boolean supports(final Class<?> type) {
             Iterator<AuthenticationDomain> serviceIterator =
                 OpenEngSBCoreServices.getServiceUtilsService().getServiceIterator(providers,
                     AuthenticationDomain.class);
             return Iterators.any(serviceIterator, new Predicate<AuthenticationDomain>() {
                 @Override
                 public boolean apply(AuthenticationDomain input) {
-                    return input.supports(credentials);
+                    return input.supports(type);
                 }
             });
         }

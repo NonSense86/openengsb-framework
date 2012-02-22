@@ -40,7 +40,7 @@ public class SecureJsonPortTest extends GenericSecurePortTest<String> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SecureJsonPortTest.class);
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper = new ObjectMapper().enableDefaultTyping();
 
     @Override
     protected SecureResponse decryptAndDecode(String message, SecretKey sessionKey) throws Exception {

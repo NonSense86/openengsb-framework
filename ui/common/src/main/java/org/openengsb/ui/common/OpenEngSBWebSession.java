@@ -22,7 +22,7 @@ import org.apache.wicket.Request;
 import org.apache.wicket.Session;
 import org.apache.wicket.authentication.AuthenticatedWebSession;
 import org.apache.wicket.authorization.strategies.role.Roles;
-import org.openengsb.connector.usernamepassword.Password;
+import org.openengsb.connector.usernamepassword.UsernamePassword;
 import org.openengsb.core.security.SecurityContext;
 import org.ops4j.pax.wicket.api.InjectorHolder;
 import org.slf4j.Logger;
@@ -56,7 +56,7 @@ public abstract class OpenEngSBWebSession extends AuthenticatedWebSession {
     @Override
     public boolean authenticate(String username, String password) {
         try {
-            SecurityContext.login(username, new Password(password));
+            SecurityContext.login(new UsernamePassword(username, password));
         } catch (AuthenticationException e) {
             LOGGER.error("Authentication failed");
             LOGGER.info("Reason: ", e);

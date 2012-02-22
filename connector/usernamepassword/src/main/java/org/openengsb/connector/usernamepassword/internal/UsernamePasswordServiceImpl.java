@@ -18,10 +18,10 @@
 package org.openengsb.connector.usernamepassword.internal;
 
 import org.apache.commons.lang.ObjectUtils;
-import org.openengsb.connector.usernamepassword.Password;
+import org.openengsb.connector.usernamepassword.UsernamePassword;
 import org.openengsb.core.api.AliveState;
-import org.openengsb.core.api.security.Credentials;
 import org.openengsb.core.api.security.model.Authentication;
+import org.openengsb.core.api.security.model.AuthenticationToken;
 import org.openengsb.core.api.security.service.UserDataManager;
 import org.openengsb.core.api.security.service.UserNotFoundException;
 import org.openengsb.core.common.AbstractOpenEngSBConnectorService;
@@ -46,25 +46,26 @@ public class UsernamePasswordServiceImpl extends AbstractOpenEngSBConnectorServi
     }
 
     @Override
-    public Authentication authenticate(String username, Credentials credentials) throws AuthenticationException {
+    public Authentication authenticate(AuthenticationToken authenticationToken) throws AuthenticationException {
+        UsernamePassword token = (UsernamePassword) authenticationToken;
+        String username = token.getPrincipal();
         String actualPassword;
         try {
             actualPassword = userManager.getUserCredentials(username, "password");
         } catch (UserNotFoundException e) {
             throw new AuthenticationException(e);
         }
-        String givenPassword = ((Password) credentials).getValue();
+        String givenPassword = token.getCredentials();
         if (ObjectUtils.notEqual(givenPassword, actualPassword)) {
             throw new AuthenticationException("wrong password");
         }
         Authentication authentication = new Authentication(username);
         return authentication;
-
     }
 
     @Override
-    public boolean supports(Credentials credentials) {
-        return credentials instanceof Password;
+    public boolean supports(Class<?> tokenType) {
+        return UsernamePassword.class.isAssignableFrom(tokenType);
     }
 
     public void setUserManager(UserDataManager userManager) {

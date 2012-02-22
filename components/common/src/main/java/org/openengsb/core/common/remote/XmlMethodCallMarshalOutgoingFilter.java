@@ -17,7 +17,6 @@
 
 package org.openengsb.core.common.remote;
 
-import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
@@ -28,21 +27,19 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
 import javax.xml.transform.dom.DOMResult;
 
-import org.apache.commons.lang.ClassUtils;
 import org.openengsb.core.api.remote.FilterAction;
 import org.openengsb.core.api.remote.FilterException;
 import org.openengsb.core.api.remote.MethodCallRequest;
 import org.openengsb.core.api.remote.MethodResult;
 import org.openengsb.core.api.remote.MethodResultMessage;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 
 /**
  * This filter takes a {@link MethodCallRequest} and serializes it into a {@link Document}. The document is then passed
  * to the next filter. The resulting document is then deseralized and returned.
- *
+ * 
  * This filter is intended for outgoing ports.
- *
+ * 
  * <code>
  * <pre>
  *      [MethodCallRequest] > Filter > [org.w3c.dom.Document]     > ...
@@ -83,15 +80,7 @@ public class XmlMethodCallMarshalOutgoingFilter extends
     private Document serializeRequest(MethodCallRequest result) {
         DOMResult domResult = new DOMResult();
         try {
-            @SuppressWarnings("unchecked")
-            List<Class<?>> classes = ClassUtils.convertClassNamesToClasses(result.getMethodCall().getClasses());
-            if (classes.contains(null)) {
-                throw new FilterException("Could not load all required classes. Require: "
-                        + result.getMethodCall().getClasses() + " got: " + classes);
-            }
-            classes.add(MethodCallRequest.class);
-            JAXBContext jaxbContext =
-                JAXBContext.newInstance(classes.toArray(new Class<?>[classes.size()]));
+            JAXBContext jaxbContext = JAXBContext.newInstance(); // classes.toArray(new Class<?>[classes.size()])
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.marshal(new JAXBElement<MethodCallRequest>(new QName(MethodCallRequest.class.getSimpleName()),
                 MethodCallRequest.class, result), domResult);
@@ -104,17 +93,10 @@ public class XmlMethodCallMarshalOutgoingFilter extends
     private MethodResultMessage parseMethodResult(Document input) throws JAXBException {
         MethodResultMessage request = unmarshaller.unmarshal(input, MethodResultMessage.class).getValue();
         MethodResult result = request.getResult();
-        Class<?> resultClass;
-        try {
-            resultClass = Class.forName(result.getClassName());
-        } catch (ClassNotFoundException e) {
-            throw new FilterException(e);
-        }
-
-        JAXBContext jaxbContext = JAXBContext.newInstance(MethodResult.class, resultClass);
+        JAXBContext jaxbContext = JAXBContext.newInstance(MethodResult.class); // resultClass
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-        Object parsedArg = unmarshaller.unmarshal((Node) result.getArg(), resultClass).getValue();
-        result.setArg(parsedArg);
+//        Object parsedArg = unmarshaller.unmarshal((Node) result.getArg()).getValue(); //resultClass
+//        result.setArg(parsedArg);
         return request;
     }
 

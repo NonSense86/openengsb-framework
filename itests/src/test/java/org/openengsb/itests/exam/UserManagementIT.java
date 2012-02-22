@@ -27,7 +27,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.openengsb.connector.usernamepassword.Password;
+import org.openengsb.connector.usernamepassword.UsernamePassword;
 import org.openengsb.core.api.security.model.Authentication;
 import org.openengsb.core.api.security.service.UserDataManager;
 import org.openengsb.core.security.SecurityContext;
@@ -70,7 +70,7 @@ public class UserManagementIT extends AbstractPreConfiguredExamTestHelper {
                 return null;
             }
         });
-        Authentication authenticate = authenticator.authenticate("test", new Password("password"));
+        Authentication authenticate = authenticator.authenticate(new UsernamePassword("test", "password"));
         assertThat(authenticate, not(nullValue()));
     }
 

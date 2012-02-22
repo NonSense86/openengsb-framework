@@ -19,28 +19,22 @@ package org.openengsb.core.security.filter;
 
 import java.util.Map;
 
-
 import org.apache.shiro.authc.AuthenticationException;
-import org.openengsb.core.api.ClassloadingDelegate;
-import org.openengsb.core.api.Constants;
-import org.openengsb.core.api.OsgiUtilsService;
 import org.openengsb.core.api.remote.FilterAction;
 import org.openengsb.core.api.remote.FilterConfigurationException;
 import org.openengsb.core.api.remote.FilterException;
-import org.openengsb.core.api.security.Credentials;
+import org.openengsb.core.api.security.model.AuthenticationToken;
 import org.openengsb.core.api.security.model.SecureRequest;
 import org.openengsb.core.api.security.model.SecureResponse;
-import org.openengsb.core.common.OpenEngSBCoreServices;
 import org.openengsb.core.common.remote.AbstractFilterChainElement;
 import org.openengsb.core.security.SecurityContext;
-import org.osgi.framework.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This filter does no actual transformation. It takes a {@link SecureRequest} extracts the {@link AuthenticationInfo}
- * and tries to authenticate. If authentication was succesful, the filter-chain will proceed. The result of the next
- * filter is just passed through.
+ * This filter does no actual transformation. It takes a {@link SecureRequest} extracts the
+ * {@link org.apache.shiro.authc.AuthenticationInfo} and tries to authenticate. If authentication was succesful, the
+ * filter-chain will proceed. The result of the next filter is just passed through.
  * 
  * This filter is intended for incoming ports.
  * 
@@ -65,20 +59,18 @@ public class MessageAuthenticatorFilter extends AbstractFilterChainElement<Secur
 
     @Override
     protected SecureResponse doFilter(SecureRequest input, Map<String, Object> metaData) {
-        LOGGER.debug("recieved authentication info: " + input.getPrincipal() + " " + input.getCredentials());
+        LOGGER.debug("recieved authentication info: " + input.getToken());
         try {
-            String className = input.getCredentials().getClassName();
-            OsgiUtilsService serviceUtilsService = OpenEngSBCoreServices.getServiceUtilsService();
-            Filter filter =
-                serviceUtilsService.makeFilter(ClassloadingDelegate.class,
-                    String.format("(%s=%s)", Constants.PROVIDED_CLASSES_KEY, className));
-            Class<? extends Credentials> credentialType =
-                (Class<? extends Credentials>) serviceUtilsService.getOsgiServiceProxy(filter,
-                    ClassloadingDelegate.class).load(className);
-            SecurityContext.login(input.getPrincipal(), input.getCredentials().toObject(credentialType));
+            // OsgiUtilsService serviceUtilsService = OpenEngSBCoreServices.getServiceUtilsService();
+            // Filter filter =
+            // serviceUtilsService.makeFilter(ClassloadingDelegate.class,
+            // String.format("(%s=%s)", Constants.PROVIDED_CLASSES_KEY, className));
+            // Class<? extends Credentials> credentialType =
+            // (Class<? extends Credentials>) serviceUtilsService.getOsgiServiceProxy(filter,
+            // ClassloadingDelegate.class).load(className);
+
+            SecurityContext.login((AuthenticationToken) input.getToken());
         } catch (AuthenticationException e) {
-            throw new FilterException(e);
-        } catch (ClassNotFoundException e) {
             throw new FilterException(e);
         }
         LOGGER.debug("authenticated");

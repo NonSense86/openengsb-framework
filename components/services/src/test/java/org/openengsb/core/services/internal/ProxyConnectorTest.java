@@ -63,7 +63,6 @@ public class ProxyConnectorTest {
         assertThat(value.getArgs(), equalTo(args));
         assertThat(value.getMetaData().size(), equalTo(1));
         assertThat(value.getMetaData().get("key"), equalTo("value"));
-        assertThat(value.getClasses().size(), equalTo(2));
         assertThat(result, equalTo(id));
     }
 

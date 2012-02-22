@@ -25,7 +25,7 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.concurrent.SubjectAwareExecutorService;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
-import org.openengsb.core.api.security.Credentials;
+import org.openengsb.core.api.security.model.AuthenticationToken;
 import org.openengsb.core.common.util.ContextAwareCallable;
 import org.openengsb.core.common.util.ContextAwareRunnable;
 import org.openengsb.core.common.util.ThreadLocalUtil;
@@ -39,9 +39,9 @@ public final class SecurityContext {
     /**
      * Authenticate with the given username and credentials, and associated the subject with the current thread.
      */
-    public static void login(String username, Credentials credentials) {
-        OpenEngSBAuthenticationToken token = new OpenEngSBAuthenticationToken(username, credentials);
-        SecurityUtils.getSubject().login(token);
+    public static void login(AuthenticationToken token) {
+        OpenEngSBAuthenticationToken wrapped = new OpenEngSBAuthenticationToken(token);
+        SecurityUtils.getSubject().login(wrapped);
     }
 
     /**

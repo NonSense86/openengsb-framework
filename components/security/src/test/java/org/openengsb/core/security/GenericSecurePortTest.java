@@ -21,13 +21,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.security.PublicKey;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -47,12 +48,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.openengsb.connector.usernamepassword.Password;
-import org.openengsb.connector.usernamepassword.internal.PasswordCredentialTypeProvider;
+import org.openengsb.connector.usernamepassword.UsernamePassword;
 import org.openengsb.core.api.ClassloadingDelegate;
 import org.openengsb.core.api.Constants;
 import org.openengsb.core.api.OsgiUtilsService;
-import org.openengsb.core.api.model.BeanDescription;
 import org.openengsb.core.api.remote.FilterAction;
 import org.openengsb.core.api.remote.FilterException;
 import org.openengsb.core.api.remote.MethodCall;
@@ -60,13 +59,14 @@ import org.openengsb.core.api.remote.MethodCallRequest;
 import org.openengsb.core.api.remote.MethodResult;
 import org.openengsb.core.api.remote.MethodResultMessage;
 import org.openengsb.core.api.remote.RequestHandler;
-import org.openengsb.core.api.security.Credentials;
 import org.openengsb.core.api.security.MessageVerificationFailedException;
 import org.openengsb.core.api.security.PrivateKeySource;
 import org.openengsb.core.api.security.model.Authentication;
+import org.openengsb.core.api.security.model.AuthenticationToken;
 import org.openengsb.core.api.security.model.SecureRequest;
 import org.openengsb.core.api.security.model.SecureResponse;
 import org.openengsb.core.common.OpenEngSBCoreServices;
+import org.openengsb.core.common.internal.ClassloadingDelegateImpl;
 import org.openengsb.core.common.remote.FilterChainFactory;
 import org.openengsb.core.common.remote.RequestMapperFilter;
 import org.openengsb.core.common.util.CipherUtils;
@@ -82,6 +82,8 @@ import org.openengsb.domain.authentication.AuthenticationException;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Sets;
 
 public abstract class GenericSecurePortTest<EncodingType> extends AbstractOsgiMockServiceTest {
 
@@ -123,11 +125,12 @@ public abstract class GenericSecurePortTest<EncodingType> extends AbstractOsgiMo
         privateKeySource = fileKeySource;
         requestHandler = mock(RequestHandler.class);
         authManager = mock(AuthenticationDomain.class);
-        when(authManager.authenticate(anyString(), any(Credentials.class))).thenAnswer(new Answer<Authentication>() {
+        when(authManager.authenticate(any(AuthenticationToken.class))).thenAnswer(new Answer<Authentication>() {
             @Override
             public Authentication answer(InvocationOnMock invocation) throws Throwable {
-                String username = (String) invocation.getArguments()[0];
-                Credentials credentials = (Credentials) invocation.getArguments()[1];
+                UsernamePassword token = (UsernamePassword) invocation.getArguments()[0];
+                String username = token.getPrincipal();
+                String credentials = token.getCredentials();
                 return new Authentication(username, credentials);
             }
         });
@@ -155,8 +158,10 @@ public abstract class GenericSecurePortTest<EncodingType> extends AbstractOsgiMo
         secureRequestHandler = getSecureRequestHandlerFilterChain();
 
         Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Constants.PROVIDED_CLASSES_KEY, Password.class.getName());
-        registerService(new PasswordCredentialTypeProvider(), props, ClassloadingDelegate.class);
+        props.put(Constants.PROVIDED_CLASSES_KEY, UsernamePassword.class.getName());
+        Collection<Class<?>> classes = Sets.newHashSet();
+        classes.add(UsernamePassword.class);
+        registerService(new ClassloadingDelegateImpl(classes), props, ClassloadingDelegate.class);
     }
 
     private void setupSecurityManager() {
@@ -187,20 +192,19 @@ public abstract class GenericSecurePortTest<EncodingType> extends AbstractOsgiMo
     }
 
     protected SecureRequest prepareSecureRequest() {
-        return prepareSecureRequest("test", new Password("password"));
+        return prepareSecureRequest(new UsernamePassword("test", "password"));
     }
 
-    private SecureRequest prepareSecureRequest(String username, Object credentials) {
+    private SecureRequest prepareSecureRequest(AuthenticationToken token) {
         MethodCall methodCall = new MethodCall("doSomething", new Object[]{ METHOD_ARG, });
         MethodCallRequest request = new MethodCallRequest(methodCall, "c42");
-        SecureRequest secureRequest = SecureRequest.create(request, username, BeanDescription.fromObject(credentials));
+        SecureRequest secureRequest = SecureRequest.create(request, token);
         return secureRequest;
     }
 
     @Test
     public void testInvalidAuthentication_shouldNotInvokeRequestHandler() throws Exception {
-        when(authManager.authenticate(anyString(), any(Credentials.class))).thenThrow(
-            new AuthenticationException("bad"));
+        doThrow(new AuthenticationException("bad")).when(authManager).authenticate(any(AuthenticationToken.class));
         SecureRequest secureRequest = prepareSecureRequest();
         try {
             processRequest(secureRequest);

@@ -58,7 +58,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.codehaus.jackson.map.SerializationConfig.Feature;
-import org.openengsb.connector.usernamepassword.Password;
+import org.openengsb.connector.usernamepassword.UsernamePassword;
 import org.openengsb.core.api.ConnectorManager;
 import org.openengsb.core.api.ConnectorProvider;
 import org.openengsb.core.api.Constants;
@@ -68,12 +68,12 @@ import org.openengsb.core.api.OsgiServiceNotAvailableException;
 import org.openengsb.core.api.OsgiUtilsService;
 import org.openengsb.core.api.WiringService;
 import org.openengsb.core.api.descriptor.ServiceDescriptor;
-import org.openengsb.core.api.model.BeanDescription;
 import org.openengsb.core.api.model.ConnectorId;
 import org.openengsb.core.api.persistence.PersistenceException;
 import org.openengsb.core.api.remote.MethodCallRequest;
 import org.openengsb.core.api.security.annotation.SecurityAttribute;
 import org.openengsb.core.api.security.annotation.SecurityAttributes;
+import org.openengsb.core.api.security.model.AuthenticationToken;
 import org.openengsb.core.api.security.model.SecureRequest;
 import org.openengsb.core.api.security.model.SecurityAttributeEntry;
 import org.openengsb.core.common.OpenEngSBCoreServices;
@@ -422,7 +422,7 @@ public class TestClient extends BasePage {
         for (Class<?> clazz : classes) {
             classList.add(clazz.getName());
         }
-        return new org.openengsb.core.api.remote.MethodCall(methodId.getName(), call.getArgumentsAsArray(), classList);
+        return new org.openengsb.core.api.remote.MethodCall(methodId.getName(), call.getArgumentsAsArray());
     }
 
     /**
@@ -449,8 +449,8 @@ public class TestClient extends BasePage {
      */
     private SecureRequest createSecureRequest(ServiceId serviceId, MethodId methodId) {
         MethodCallRequest methodCallRequest = createMethodCallRequest(serviceId, methodId);
-        BeanDescription beanDescription = BeanDescription.fromObject(new Password("yourpassword"));
-        return SecureRequest.create(methodCallRequest, "yourusername", beanDescription);
+        AuthenticationToken token = new UsernamePassword("yourusername", "yourpassword");
+        return SecureRequest.create(methodCallRequest, token);
     }
 
     /**

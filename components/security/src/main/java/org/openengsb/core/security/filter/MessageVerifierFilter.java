@@ -25,6 +25,7 @@ import org.openengsb.core.api.remote.FilterAction;
 import org.openengsb.core.api.remote.FilterConfigurationException;
 import org.openengsb.core.api.remote.FilterException;
 import org.openengsb.core.api.security.MessageVerificationFailedException;
+import org.openengsb.core.api.security.model.AuthenticationToken;
 import org.openengsb.core.api.security.model.SecureRequest;
 import org.openengsb.core.api.security.model.SecureResponse;
 import org.openengsb.core.common.remote.AbstractFilterChainElement;
@@ -58,11 +59,11 @@ public class MessageVerifierFilter extends AbstractFilterChainElement<SecureRequ
     private FilterAction next;
 
     private long timeout = 10 * 60 * 1000; // 10 minutes
-    private ConcurrentMap<String, Long> lastMessageTimestamp = new MapMaker()
+    private ConcurrentMap<Object, Long> lastMessageTimestamp = new MapMaker()
         .expireAfterWrite(timeout, TimeUnit.MILLISECONDS)
-        .makeComputingMap(new Function<String, Long>() {
+        .makeComputingMap(new Function<Object, Long>() {
             @Override
-            public Long apply(String input) {
+            public Long apply(Object input) {
                 return 0L;
             };
         });
@@ -98,7 +99,7 @@ public class MessageVerifierFilter extends AbstractFilterChainElement<SecureRequ
     }
 
     private void checkForReplayedMessage(SecureRequest request) throws MessageVerificationFailedException {
-        String authenticationInfo = request.getPrincipal();
+        Object authenticationInfo = ((AuthenticationToken) request.getToken()).getPrincipal();
         synchronized (lastMessageTimestamp) {
             if (lastMessageTimestamp.get(authenticationInfo) >= request.getTimestamp()) {
                 throw new MessageVerificationFailedException(

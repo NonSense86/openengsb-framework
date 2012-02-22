@@ -17,7 +17,6 @@
 package org.openengsb.core.security;
 
 import org.apache.shiro.authc.AuthenticationToken;
-import org.openengsb.core.api.security.Credentials;
 
 public class OpenEngSBAuthenticationToken implements AuthenticationToken {
 
@@ -26,22 +25,27 @@ public class OpenEngSBAuthenticationToken implements AuthenticationToken {
      */
     private static final long serialVersionUID = 3909132403539984150L;
 
-    private String username;
-    private Credentials credentials;
+    private org.openengsb.core.api.security.model.AuthenticationToken token;
 
-    public OpenEngSBAuthenticationToken(String username, Credentials credentials) {
-        this.username = username;
-        this.credentials = credentials;
+    public OpenEngSBAuthenticationToken() {
     }
 
-    @Override
-    public Object getPrincipal() {
-        return username;
+    public OpenEngSBAuthenticationToken(org.openengsb.core.api.security.model.AuthenticationToken token) {
+        this.token = token;
     }
 
     @Override
     public Object getCredentials() {
-        return credentials;
+        return token.getCredentials();
+    }
+
+    @Override
+    public Object getPrincipal() {
+        return token.getPrincipal();
+    }
+
+    public org.openengsb.core.api.security.model.AuthenticationToken getToken() {
+        return token;
     }
 
 }

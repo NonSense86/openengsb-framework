@@ -43,7 +43,7 @@ import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.ThreadContext;
 import org.junit.Before;
 import org.junit.Test;
-import org.openengsb.connector.usernamepassword.Password;
+import org.openengsb.connector.usernamepassword.UsernamePassword;
 import org.openengsb.core.api.context.ContextHolder;
 import org.openengsb.core.api.security.service.AccessDeniedException;
 import org.openengsb.core.security.internal.RootSubjectHolder;
@@ -151,7 +151,7 @@ public class MethodInterceptorTest extends AbstractOpenEngSBTest {
 
     private void authenticate(String user, String password) {
         Subject subject = SecurityUtils.getSubject();
-        subject.login(new OpenEngSBAuthenticationToken(user, new Password(password)));
+        subject.login(new OpenEngSBAuthenticationToken(new UsernamePassword(user, password)));
         System.out.println(subject.isAuthenticated());
     }
 }

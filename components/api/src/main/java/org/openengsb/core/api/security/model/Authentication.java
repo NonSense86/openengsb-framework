@@ -23,26 +23,26 @@ package org.openengsb.core.api.security.model;
  */
 public class Authentication {
 
-    private String principal;
+    private Object principal;
     private Object credentials;
 
     public Authentication() {
     }
 
-    public Authentication(String principal, Object credentials) {
+    public Authentication(Object principal, Object credentials) {
         this.principal = principal;
         this.credentials = credentials;
     }
 
-    public Authentication(String principal) {
+    public Authentication(Object principal) {
         this.principal = principal;
     }
 
-    public String getUsername() {
+    public Object getPrincipal() {
         return principal;
     }
 
-    public void setUsername(String principal) {
+    public void setPrincipal(Object principal) {
         this.principal = principal;
     }
 

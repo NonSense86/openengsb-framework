@@ -18,8 +18,8 @@
 package org.openengsb.domain.authentication;
 
 import org.openengsb.core.api.Domain;
-import org.openengsb.core.api.security.Credentials;
 import org.openengsb.core.api.security.model.Authentication;
+import org.openengsb.core.api.security.model.AuthenticationToken;
 
 /**
  * provides a way of authenticating users with specific credentials
@@ -32,11 +32,11 @@ public interface AuthenticationDomain extends Domain {
      *
      * @throws AuthenticationException if the authentication fails.
      */
-    Authentication authenticate(String username, Credentials credentials) throws AuthenticationException;
+    Authentication authenticate(AuthenticationToken token) throws AuthenticationException;
 
     /**
      * checks whether the given credentials are supported by this connector
      */
-    boolean supports(Credentials credentials);
+    boolean supports(Class<?> tokenType);
 
 }

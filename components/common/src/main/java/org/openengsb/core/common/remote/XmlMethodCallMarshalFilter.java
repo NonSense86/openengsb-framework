@@ -17,7 +17,6 @@
 
 package org.openengsb.core.common.remote;
 
-import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
@@ -34,7 +33,6 @@ import org.openengsb.core.api.remote.MethodCall;
 import org.openengsb.core.api.remote.MethodCallRequest;
 import org.openengsb.core.api.remote.MethodResultMessage;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 
 /**
  * This filter takes a {@link Document} representing a {@link MethodCallRequest} and deserializes it. The
@@ -83,14 +81,12 @@ public class XmlMethodCallMarshalFilter extends AbstractFilterChainElement<Docum
         DOMResult domResult = new DOMResult();
         try {
             JAXBContext jaxbContext =
-                JAXBContext.newInstance(MethodResultMessage.class, Class.forName(result.getResult().getClassName()));
+                JAXBContext.newInstance(MethodResultMessage.class); // Class.forName(result.getResult().getClassName()
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.marshal(new JAXBElement<MethodResultMessage>(
                 new QName(MethodResultMessage.class.getSimpleName()),
                 MethodResultMessage.class, result), domResult);
         } catch (JAXBException e) {
-            throw new FilterException(e);
-        } catch (ClassNotFoundException e) {
             throw new FilterException(e);
         }
         return (Document) domResult.getNode();
@@ -99,22 +95,12 @@ public class XmlMethodCallMarshalFilter extends AbstractFilterChainElement<Docum
     private MethodCallRequest parseMethodCall(Document input) throws JAXBException {
         MethodCallRequest request = unmarshaller.unmarshal(input, MethodCallRequest.class).getValue();
         MethodCall result = request.getMethodCall();
-        List<String> classNames = result.getClasses();
-        Class<?>[] clazzes = new Class<?>[classNames.size()];
-        ClassLoader cl = this.getClass().getClassLoader();
-        for (int i = 0; i < classNames.size(); i++) {
-            try {
-                clazzes[i] = cl.loadClass(classNames.get(i));
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        JAXBContext jaxbContext = JAXBContext.newInstance(clazzes);
+        JAXBContext jaxbContext = JAXBContext.newInstance(); // clazzes
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-        Object[] args = result.getArgs();
-        for (int i = 0; i < args.length; i++) {
-            args[i] = unmarshaller.unmarshal((Node) args[i], clazzes[i]).getValue();
-        }
+//        Object[] args = result.getArgs();
+//        for (int i = 0; i < args.length; i++) {
+//            args[i] = unmarshaller.unmarshal((Node) args[i], clazzes[i]).getValue();
+//        }
         return request;
     }
 

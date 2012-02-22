@@ -56,9 +56,8 @@ public class JsonMethodCallMarshalFilter extends AbstractFilterChainElement<Stri
         MethodCallRequest call;
         try {
             call = objectMapper.readValue(input, MethodCallRequest.class);
-            JsonUtils.convertAllArgs(call);
             MethodResultMessage returnValue = (MethodResultMessage) next.filter(call, metadata);
-            return objectMapper.writeValueAsString(returnValue);
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(returnValue);
         } catch (IOException e) {
             throw new FilterException(e);
         }

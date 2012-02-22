@@ -34,7 +34,7 @@ import org.junit.rules.MethodRule;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.openengsb.core.api.security.Credentials;
+import org.openengsb.core.security.OpenEngSBAuthenticationToken;
 import org.openengsb.core.test.rules.DedicatedThread;
 import org.openengsb.domain.authentication.AuthenticationException;
 import org.ops4j.pax.wicket.test.spring.PaxWicketSpringBeanComponentInjector;
@@ -53,7 +53,7 @@ public abstract class AbstractLoginTest extends AbstractUITest {
      */
     @After
     public void detachSubject() {
-        this.threadState.clear();
+        threadState.clear();
     }
 
     @Before
@@ -64,11 +64,11 @@ public abstract class AbstractLoginTest extends AbstractUITest {
         tester.getApplication().addComponentInstantiationListener(
             new PaxWicketSpringBeanComponentInjector(tester.getApplication(), context));
 
-        this.mockShiroSession = mock(Session.class);
-        this.mockSubject = mock(Subject.class);
-        when(this.mockSubject.getSession()).thenReturn(this.mockShiroSession);
-        this.threadState = new SubjectThreadState(this.mockSubject);
-        this.threadState.bind();
+        mockShiroSession = mock(Session.class);
+        mockSubject = mock(Subject.class);
+        when(mockSubject.getSession()).thenReturn(mockShiroSession);
+        threadState = new SubjectThreadState(mockSubject);
+        threadState.bind();
 
         final AtomicReference<Object> authenticated = new AtomicReference<Object>();
 
@@ -76,8 +76,9 @@ public abstract class AbstractLoginTest extends AbstractUITest {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 AuthenticationToken t = (AuthenticationToken) invocation.getArguments()[0];
+
                 try {
-                    authConnector.authenticate(t.getPrincipal().toString(), (Credentials) t.getCredentials());
+                    authConnector.authenticate(((OpenEngSBAuthenticationToken) t).getToken());
                 } catch (AuthenticationException e) {
                     throw new org.apache.shiro.authc.AuthenticationException(e);
                 }

@@ -32,7 +32,6 @@ import org.openengsb.core.api.remote.MethodResult.ReturnType;
 import org.openengsb.core.api.security.model.SecureRequest;
 import org.openengsb.core.api.security.model.SecureResponse;
 import org.openengsb.core.common.remote.AbstractFilterChainElement;
-import org.openengsb.core.common.util.JsonUtils;
 
 /**
  * This filter takes a {@link SecureRequest} and serializes it to JSON. The String s then passed on to the next filter.
@@ -74,8 +73,6 @@ public class OutgoingJsonSecureMethodCallMarshalFilter extends
 
         if (result.getType().equals(ReturnType.Void)) {
             result.setArg(null);
-        } else {
-            JsonUtils.convertResult(result);
         }
         return resultMessage;
     }

@@ -33,7 +33,7 @@ import org.openengsb.core.common.util.JsonUtils;
 /**
  * This filter takes a {@link MethodCallRequest} and serializes it to JSON. The String s then passed on to the next
  * filter. The returned JSON-String representing a {@link MethodResultMessage} is then deserialized and returned.
- *
+ * 
  * <code>
  * <pre>
  *      [MethodCallRequest]   > Filter > [MethodCallRequest as JSON-string]     > ...
@@ -69,15 +69,6 @@ public class JsonOutgoingMethodCallMarshalFilter extends
         MethodResult result = resultMessage.getResult();
         if (result.getType().equals(ReturnType.Void)) {
             result.setArg(null);
-        } else {
-            Class<?> className;
-            try {
-                className = Class.forName(result.getClassName());
-            } catch (ClassNotFoundException e) {
-                throw new FilterException(e);
-            }
-            Object convertedValue = objectMapper.convertValue(result.getArg(), className);
-            result.setArg(convertedValue);
         }
         return resultMessage;
     }

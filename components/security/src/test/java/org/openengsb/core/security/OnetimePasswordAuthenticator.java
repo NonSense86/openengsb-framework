@@ -19,8 +19,8 @@ package org.openengsb.core.security;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.math.NumberRange;
 import org.openengsb.core.api.AliveState;
-import org.openengsb.core.api.security.Credentials;
 import org.openengsb.core.api.security.model.Authentication;
+import org.openengsb.core.api.security.model.AuthenticationToken;
 import org.openengsb.core.api.security.service.UserDataManager;
 import org.openengsb.core.api.security.service.UserNotFoundException;
 import org.openengsb.core.common.AbstractOpenEngSBService;
@@ -36,8 +36,10 @@ public class OnetimePasswordAuthenticator extends AbstractOpenEngSBService imple
     private UserDataManager userManager;
 
     @Override
-    public Authentication authenticate(String username, Credentials credentials) throws AuthenticationException {
-        Integer code = ((OneTimeValue) credentials).getValue();
+    public Authentication authenticate(AuthenticationToken token) throws AuthenticationException {
+        UserOneTimeValue realToken = (UserOneTimeValue) token;
+        Integer code = realToken.getCredentials();
+        String username = realToken.getPrincipal();
         if (!NUMBER_RANGE.containsInteger(code)) {
             throw new AuthenticationException("value is outside the specified range");
         }
@@ -60,8 +62,8 @@ public class OnetimePasswordAuthenticator extends AbstractOpenEngSBService imple
     }
 
     @Override
-    public boolean supports(Credentials credentials) {
-        return credentials instanceof OneTimeValue;
+    public boolean supports(Class<?> type) {
+        return UserOneTimeValue.class.isAssignableFrom(type);
     }
 
     @Override

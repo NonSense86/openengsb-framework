@@ -21,7 +21,6 @@ import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
-import org.openengsb.core.api.security.Credentials;
 import org.openengsb.core.api.security.model.Authentication;
 import org.openengsb.domain.authentication.AuthenticationDomain;
 
@@ -32,9 +31,12 @@ public class OpenEngSBShiroAuthenticator extends AbstractAuthenticator {
     @Override
     protected AuthenticationInfo doAuthenticate(AuthenticationToken token) throws AuthenticationException {
         try {
-            Authentication authenticate =
-                authenticator.authenticate(token.getPrincipal().toString(), (Credentials) token.getCredentials());
-            return new SimpleAuthenticationInfo(authenticate.getUsername(), authenticate.getCredentials(),
+            if (!(token instanceof OpenEngSBAuthenticationToken)) {
+                throw new AuthenticationException("unsupported type of token: " + token);
+            }
+            OpenEngSBAuthenticationToken wrapper = (OpenEngSBAuthenticationToken) token;
+            Authentication authenticate = authenticator.authenticate(wrapper.getToken());
+            return new SimpleAuthenticationInfo(authenticate.getPrincipal(), authenticate.getCredentials(),
                 "openengsb");
         } catch (org.openengsb.domain.authentication.AuthenticationException e) {
             throw new AuthenticationException(e);

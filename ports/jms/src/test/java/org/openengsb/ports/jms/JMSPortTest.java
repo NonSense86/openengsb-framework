@@ -34,6 +34,7 @@ import java.io.StringWriter;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
@@ -53,7 +54,6 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationInfo;
-import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.Authenticator;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.mgt.DefaultSecurityManager;
@@ -63,8 +63,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.openengsb.connector.usernamepassword.Password;
-import org.openengsb.connector.usernamepassword.internal.PasswordCredentialTypeProvider;
+import org.openengsb.connector.usernamepassword.UsernamePassword;
 import org.openengsb.core.api.ClassloadingDelegate;
 import org.openengsb.core.api.Constants;
 import org.openengsb.core.api.OsgiUtilsService;
@@ -73,12 +72,12 @@ import org.openengsb.core.api.remote.MethodCallRequest;
 import org.openengsb.core.api.remote.MethodResult;
 import org.openengsb.core.api.remote.MethodResultMessage;
 import org.openengsb.core.api.remote.RequestHandler;
-import org.openengsb.core.api.security.Credentials;
 import org.openengsb.core.api.security.PrivateKeySource;
 import org.openengsb.core.api.security.model.Authentication;
 import org.openengsb.core.api.security.model.EncryptedMessage;
 import org.openengsb.core.api.security.model.SecureResponse;
 import org.openengsb.core.common.OpenEngSBCoreServices;
+import org.openengsb.core.common.internal.ClassloadingDelegateImpl;
 import org.openengsb.core.common.remote.FilterChain;
 import org.openengsb.core.common.remote.FilterChainFactory;
 import org.openengsb.core.common.remote.JsonMethodCallMarshalFilter;
@@ -105,6 +104,7 @@ import org.springframework.jms.support.JmsUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 public class JMSPortTest extends AbstractOsgiMockServiceTest {
 
@@ -127,15 +127,24 @@ public class JMSPortTest extends AbstractOsgiMockServiceTest {
             + "QFT8w7k8/FfcAFl+ysJ2lSGpeKkt213QkHpAn2HvHRviVErKSHgEKh10Nf7pU3cgPwHDXNEuQ6Bb"
             + "Ky/vHQD1rMM=";
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().enableDefaultTyping();
 
     private static final String METHOD_CALL = ""
             + "{"
-            + "  \"classes\":[\"java.lang.String\",\"java.lang.Integer\",\"org.openengsb.ports.jms.TestClass\"],"
-            + "  \"methodName\":\"method\","
-            + "  \"args\":[\"123\",5,{\"test\":\"test\"}],"
-            + "  \"metaData\":{\"serviceId\":\"test\"}"
+            + "  \"methodName\" : \"method\","
+            + "  \"args\" : [ \"123\", 5, [ \"org.openengsb.ports.jms.TestClass\", {"
+            + "    \"test\" : \"test\""
+            + "  } ] ],"
+            + "  \"metaData\" : [ \"java.util.HashMap\", {"
+            + "   \"serviceId\" : \"test\""
+            + "  } ]"
             + "}";
+    // + "{"
+    // + "  \"classes\":[\"java.lang.String\",\"java.lang.Integer\",\"org.openengsb.ports.jms.TestClass\"],"
+    // + "  \"methodName\":\"method\","
+    // + "  \"args\":[\"123\",5,{\"test\":\"test\"}],"
+    // + "  \"metaData\":{\"serviceId\":\"test\"}"
+    // + "}";
 
     private static final String METHOD_CALL_REQUEST = ""
             + "{"
@@ -145,19 +154,18 @@ public class JMSPortTest extends AbstractOsgiMockServiceTest {
             + "}";
 
     private static final String AUTH_DATA = ""
-            + "{"
-            + "  \"className\":\"org.openengsb.connector.usernamepassword.Password\","
-            + "  \"data\":"
+            + "["
+            + "  \"org.openengsb.connector.usernamepassword.UsernamePassword\","
             + "  {"
-            + "    \"value\":\"password\""
+            + "    \"principal\": \"user\","
+            + "    \"credentials\":\"password\""
             + "  }"
-            + "}";
+            + "]";
 
     private static final String SECURE_METHOD_CALL = ""
             + "{"
             + "  \"timestamp\":" + System.currentTimeMillis() + ","
-            + "  \"principal\": \"user\","
-            + "  \"credentials\":" + AUTH_DATA + ","
+            + "  \"token\":" + AUTH_DATA + ","
             + "  \"message\":" + METHOD_CALL_REQUEST
             + "}";
 
@@ -200,6 +208,14 @@ public class JMSPortTest extends AbstractOsgiMockServiceTest {
     private PrivateKey privateKey;
     private PublicKey publicKey;
 
+    @Test
+    public void createMessage() throws Exception {
+        // MethodCall methodCall = new MethodCall("method", new Object[]{ "123", new Integer(5), new TestClass("test")
+        // });
+
+        System.out.println(OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(call.getMethodCall()));
+    }
+
     @Before
     public void setup() {
         setupKeys();
@@ -237,12 +253,14 @@ public class JMSPortTest extends AbstractOsgiMockServiceTest {
         result.setMetaData(metaData);
         methodReturn = new MethodResultMessage(result, "123");
         Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Constants.PROVIDED_CLASSES_KEY, Password.class.getName());
-        registerService(new PasswordCredentialTypeProvider(), props, ClassloadingDelegate.class);
+        props.put(Constants.PROVIDED_CLASSES_KEY, UsernamePassword.class.getName());
+        Collection<Class<?>> classes = Sets.newHashSet();
+        classes.add(UsernamePassword.class);
+        registerService(new ClassloadingDelegateImpl(classes), props, ClassloadingDelegate.class);
         DefaultSecurityManager securityManager = new DefaultSecurityManager();
         securityManager.setAuthenticator(new Authenticator() {
             @Override
-            public AuthenticationInfo authenticate(AuthenticationToken authenticationToken)
+            public AuthenticationInfo authenticate(org.apache.shiro.authc.AuthenticationToken authenticationToken)
                 throws org.apache.shiro.authc.AuthenticationException {
                 return new SimpleAuthenticationInfo(authenticationToken.getPrincipal(), authenticationToken
                     .getCredentials(), "openengsb");
@@ -256,7 +274,7 @@ public class JMSPortTest extends AbstractOsgiMockServiceTest {
         publicKey = CipherUtils.deserializePublicKey(Base64.decodeBase64(PUBLIC_KEY_64), "RSA");
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = 60000)
     public void start_ShouldListenToIncomingCallsAndCallSetRequestHandler() throws InterruptedException, IOException {
         FilterChainFactory<String, String> factory = new FilterChainFactory<String, String>(String.class, String.class);
         factory.setFilters(Arrays.asList(JsonMethodCallMarshalFilter.class, new RequestMapperFilter(handler)));
@@ -264,13 +282,11 @@ public class JMSPortTest extends AbstractOsgiMockServiceTest {
         incomingPort.start();
 
         String resultString = sendWithTempQueue(METHOD_CALL_REQUEST);
-
-        JsonNode resultMessage = OBJECT_MAPPER.readTree(resultString);
-        JsonNode readTree = resultMessage.get("result");
-        assertThat(readTree.get("className").toString(), equalTo("\"org.openengsb.ports.jms.TestClass\""));
-        assertThat(readTree.get("metaData").toString(), equalTo("{\"serviceId\":\"test\"}"));
-        assertThat(readTree.get("type").toString(), equalTo("\"Object\""));
-        assertThat(readTree.get("arg").toString(), equalTo("{\"test\":\"test\"}"));
+        System.out.println(resultString);
+        MethodResultMessage resultMessage = OBJECT_MAPPER.readValue(resultString, MethodResultMessage.class);
+        assertThat(resultMessage.getResult().getMetaData().get("serviceId"), is("test"));
+        assertThat((TestClass) resultMessage.getResult().getArg(), is(new TestClass("test")));
+        assertThat(resultMessage.getResult().getType(), is(MethodResult.ReturnType.Object));
     }
 
     private String sendWithTempQueue(final String msg) {
@@ -284,7 +300,7 @@ public class JMSPortTest extends AbstractOsgiMockServiceTest {
                 TextMessage message = session.createTextMessage(msg);
                 message.setJMSReplyTo(tempQueue);
                 producer.send(message);
-                TextMessage response = (TextMessage) consumer.receive(1000);
+                TextMessage response = (TextMessage) consumer.receive(60000);
                 assertThat("server should set the value of the correltion ID to the value of the received message id",
                     response.getJMSCorrelationID(), is(message.getJMSMessageID()));
                 JmsUtils.closeMessageProducer(producer);
@@ -308,28 +324,27 @@ public class JMSPortTest extends AbstractOsgiMockServiceTest {
         byte[] encryptedContent = CipherUtils.encrypt(SECURE_METHOD_CALL.getBytes(), sessionKey);
 
         EncryptedMessage encryptedMessage = new EncryptedMessage(encryptedContent, encryptedKey);
-        final String encryptedString = new ObjectMapper().writeValueAsString(encryptedMessage);
+        final String encryptedString = OBJECT_MAPPER.writeValueAsString(encryptedMessage);
 
         String resultString = sendWithTempQueue(encryptedString);
 
         byte[] result = CipherUtils.decrypt(Base64.decodeBase64(resultString), sessionKey);
         SecureResponse result2 = OBJECT_MAPPER.readValue(result, SecureResponse.class);
         MethodResult methodResult = result2.getMessage().getResult();
-        Object realResultArg =
-            OBJECT_MAPPER.convertValue(methodResult.getArg(), Class.forName(methodResult.getClassName()));
-        assertThat(realResultArg, equalTo((Object) new TestClass("test")));
+
+        assertThat(methodResult.getArg(), equalTo((Object) new TestClass("test")));
     }
 
     private FilterChain createSecureFilterChain() throws Exception {
         AuthenticationDomain authenticationManager = mock(AuthenticationDomain.class);
-        when(authenticationManager.authenticate(anyString(), any(Credentials.class))).thenAnswer(
+        when(authenticationManager.authenticate(any(UsernamePassword.class))).thenAnswer(
             new Answer<Authentication>() {
                 @Override
                 public Authentication answer(InvocationOnMock invocation) throws Throwable {
-                    String user = (String) invocation.getArguments()[0];
-                    Password credentials = (Password) invocation.getArguments()[1];
-                    if ("user".equals(user) && credentials.getValue().equals("password")) {
-                        return new Authentication(user, credentials.toString());
+                    UsernamePassword user =
+                        (UsernamePassword) invocation.getArguments()[0];
+                    if ("user".equals(user.getPrincipal()) && user.getCredentials().equals("password")) {
+                        return new Authentication(user.getPrincipal(), user.getCredentials());
                     }
                     throw new AuthenticationException("username and password did not match");
                 }
@@ -389,12 +404,11 @@ public class JMSPortTest extends AbstractOsgiMockServiceTest {
     public void methodReturn_DeserialiseResponse() throws IOException {
         StringWriter writer = new StringWriter();
         OBJECT_MAPPER.writeValue(writer, methodReturn);
-        JsonNode resultMessage = OBJECT_MAPPER.readTree(writer.toString());
+        JsonNode resultMessage = new ObjectMapper().readTree(writer.toString());
         JsonNode readTree = resultMessage.get("result");
-        assertThat(readTree.get("className").toString(), equalTo("\"org.openengsb.ports.jms.TestClass\""));
-        assertThat(readTree.get("metaData").toString(), equalTo("{\"serviceId\":\"test\"}"));
+        // assertThat(readTree.get("metaData").toString(), equalTo("{\"serviceId\":\"test\"}"));
         assertThat(readTree.get("type").toString(), equalTo("\"Object\""));
-        assertThat(readTree.get("arg").toString(), equalTo("{\"test\":\"test\"}"));
+        assertThat(readTree.get("arg").toString(), containsString("{\"test\":\"test\"}"));
 
     }
 

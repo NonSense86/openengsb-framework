@@ -17,20 +17,12 @@
 
 package org.openengsb.core.common.util;
 
-import java.util.List;
-
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
-import org.openengsb.core.api.remote.MethodCall;
-import org.openengsb.core.api.remote.MethodCallRequest;
-import org.openengsb.core.api.remote.MethodResult;
-import org.openengsb.core.api.remote.MethodResultMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 public final class JsonUtils {
 
@@ -38,40 +30,9 @@ public final class JsonUtils {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private static Object convertArgument(String className, Object arg) {
-        try {
-            Class<?> type = JsonUtils.class.getClassLoader().loadClass(className);
-            return MAPPER.convertValue(arg, type);
-        } catch (ClassNotFoundException e) {
-            LOGGER.error("could not convert argument " + arg, e);
-            return arg;
-        }
-    }
-
-    public static void convertAllArgs(MethodCall call) {
-        Object[] args = call.getArgs();
-        List<String> classes = call.getClasses();
-        Preconditions.checkArgument(args.length == classes.size());
-        for (int i = 0; i < args.length; i++) {
-            args[i] = convertArgument(classes.get(i), args[i]);
-        }
-    }
-
-    public static void convertResult(MethodResult result) {
-        Object convertArgument = convertArgument(result.getClassName(), result.getArg());
-        result.setArg(convertArgument);
-    }
-
-    public static void convertAllArgs(MethodCallRequest request) {
-        convertAllArgs(request.getMethodCall());
-    }
-
-    public static void convertResult(MethodResultMessage message) {
-        convertResult(message.getResult());
-    }
-
     public static ObjectMapper createObjectMapperWithIntroSpectors() {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.enableDefaultTyping();
         AnnotationIntrospector primaryIntrospector = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondaryIntrospector = new JaxbAnnotationIntrospector();
         AnnotationIntrospector introspector =
