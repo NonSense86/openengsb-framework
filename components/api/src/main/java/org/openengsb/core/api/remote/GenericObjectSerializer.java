@@ -14,13 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.openengsb.core.api.security.model;
+package org.openengsb.core.api.remote;
 
+import java.io.IOException;
 
-public interface AuthenticationToken {
+public interface GenericObjectSerializer {
 
-    Object getPrincipal();
+    byte[] serializeToByteArray(Object object) throws IOException;
 
-    Object getCredentials();
+    String serializeToString(Object object) throws IOException;
+
+    <T> T parse(String data, Class<T> type) throws IOException;
+
+    <T> T parse(byte[] data, Class<T> type) throws IOException;
 
 }

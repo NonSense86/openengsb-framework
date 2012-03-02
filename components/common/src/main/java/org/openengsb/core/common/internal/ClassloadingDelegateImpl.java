@@ -16,11 +16,13 @@
  */
 package org.openengsb.core.common.internal;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
 import org.openengsb.core.api.ClassloadingDelegate;
+import org.openengsb.core.api.model.ShortTypeName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +36,10 @@ public class ClassloadingDelegateImpl implements ClassloadingDelegate {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClassloadingDelegateImpl.class);
 
     protected Map<String, Class<?>> supported;
+
+    public ClassloadingDelegateImpl(Class<?>... classes) {
+        setClasses(Arrays.asList(classes));
+    }
 
     public ClassloadingDelegateImpl(Collection<Class<?>> classes) {
         setClasses(classes);
@@ -57,6 +63,10 @@ public class ClassloadingDelegateImpl implements ClassloadingDelegate {
         Map<String, Class<?>> supported = Maps.newHashMap();
         for (Class<?> clazz : classnames) {
             supported.put(clazz.getName(), clazz);
+            ShortTypeName annotation = clazz.getAnnotation(ShortTypeName.class);
+            if (annotation != null) {
+                supported.put(annotation.value(), clazz);
+            }
         }
         this.supported = Collections.unmodifiableMap(supported);
     }

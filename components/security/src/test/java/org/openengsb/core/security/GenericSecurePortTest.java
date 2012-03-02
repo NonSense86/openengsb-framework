@@ -18,6 +18,7 @@
 package org.openengsb.core.security;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -28,6 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
@@ -57,6 +59,7 @@ import org.openengsb.core.api.remote.FilterException;
 import org.openengsb.core.api.remote.MethodCall;
 import org.openengsb.core.api.remote.MethodCallRequest;
 import org.openengsb.core.api.remote.MethodResult;
+import org.openengsb.core.api.remote.MethodResult.ReturnType;
 import org.openengsb.core.api.remote.MethodResultMessage;
 import org.openengsb.core.api.remote.RequestHandler;
 import org.openengsb.core.api.security.MessageVerificationFailedException;
@@ -158,7 +161,7 @@ public abstract class GenericSecurePortTest<EncodingType> extends AbstractOsgiMo
         secureRequestHandler = getSecureRequestHandlerFilterChain();
 
         Dictionary<String, Object> props = new Hashtable<String, Object>();
-        props.put(Constants.PROVIDED_CLASSES_KEY, UsernamePassword.class.getName());
+        props.put(Constants.PROVIDED_CLASSES_KEY, Arrays.asList(UsernamePassword.class.getName(), "UsernamePassword"));
         Collection<Class<?>> classes = Sets.newHashSet();
         classes.add(UsernamePassword.class);
         registerService(new ClassloadingDelegateImpl(classes), props, ClassloadingDelegate.class);
@@ -206,12 +209,12 @@ public abstract class GenericSecurePortTest<EncodingType> extends AbstractOsgiMo
     public void testInvalidAuthentication_shouldNotInvokeRequestHandler() throws Exception {
         doThrow(new AuthenticationException("bad")).when(authManager).authenticate(any(AuthenticationToken.class));
         SecureRequest secureRequest = prepareSecureRequest();
-        try {
-            processRequest(secureRequest);
-            fail("Expected exception");
-        } catch (FilterException e) {
-            assertThat(e.getCause(), is(org.apache.shiro.authc.AuthenticationException.class));
-        }
+
+        SecureResponse processRequest = processRequest(secureRequest);
+
+        assertThat(processRequest.getMessage().getResult().getType(), is(ReturnType.Exception));
+        assertThat(processRequest.getMessage().getResult().getArg(),
+            instanceOf(org.apache.shiro.authc.AuthenticationException.class));
         verify(requestHandler, never()).handleCall(any(MethodCall.class));
     }
 

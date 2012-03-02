@@ -19,10 +19,15 @@ package org.openengsb.connector.usernamepassword;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.openengsb.core.api.model.ShortTypeName;
 import org.openengsb.core.api.security.model.AuthenticationToken;
 
 import com.google.common.base.Objects;
 
+@ShortTypeName("UsernamePassword")
+@XmlRootElement
 public class UsernamePassword implements AuthenticationToken, Serializable {
     /**
      * 

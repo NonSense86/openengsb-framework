@@ -57,6 +57,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig.Feature;
 import org.openengsb.connector.usernamepassword.UsernamePassword;
 import org.openengsb.core.api.ConnectorManager;
@@ -79,7 +80,6 @@ import org.openengsb.core.api.security.model.SecurityAttributeEntry;
 import org.openengsb.core.common.OpenEngSBCoreServices;
 import org.openengsb.core.common.SecurityAttributeProviderImpl;
 import org.openengsb.core.common.util.Comparators;
-import org.openengsb.core.common.util.JsonUtils;
 import org.openengsb.ui.admin.basePage.BasePage;
 import org.openengsb.ui.admin.connectorEditorPage.ConnectorEditorPage;
 import org.openengsb.ui.admin.methodArgumentPanel.MethodArgumentPanel;
@@ -115,6 +115,9 @@ public class TestClient extends BasePage {
 
     @PaxWicketBean(name = "attributeStore")
     private SecurityAttributeProviderImpl attributeStore;
+//
+//    @PaxWicketBean(name = "objectSerializers")
+//    private List<ObjectSerializer> serializers;
 
     private DropDownChoice<MethodId> methodList;
 
@@ -480,7 +483,7 @@ public class TestClient extends BasePage {
         String jsonResult = "";
         try {
             jsonResult =
-                JsonUtils.createObjectMapperWithIntroSpectors().configure(Feature.FAIL_ON_EMPTY_BEANS, false)
+                new ObjectMapper().configure(Feature.FAIL_ON_EMPTY_BEANS, false)
                     .writeValueAsString(secureRequest);
         } catch (IOException ex) {
             handleExceptionWithFeedback(ex);

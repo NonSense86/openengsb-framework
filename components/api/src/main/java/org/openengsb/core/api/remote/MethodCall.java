@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import org.apache.commons.lang.ArrayUtils;
 
 import com.google.common.base.Objects;
 
@@ -36,7 +36,6 @@ import com.google.common.base.Objects;
  * identify the right method.
  */
 @SuppressWarnings("serial")
-@XmlRootElement
 public class MethodCall implements Serializable {
 
     private String methodName;
@@ -109,6 +108,14 @@ public class MethodCall implements Serializable {
                     && Objects.equal(metaData, other.metaData);
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+            .add("methodName", methodName)
+            .add("args", ArrayUtils.toString(args))
+            .add("metadata", metaData).toString();
     }
 
 }

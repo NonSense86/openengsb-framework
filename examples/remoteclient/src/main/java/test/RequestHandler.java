@@ -19,8 +19,8 @@ package test;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.openengsb.core.api.remote.MethodCall;
 import org.openengsb.core.api.remote.MethodResult;
 import org.openengsb.core.api.remote.MethodResult.ReturnType;
@@ -35,19 +35,15 @@ class RequestHandler {
     private ExampleConnector connector = new ExampleConnector();
 
     public MethodResult process(MethodCall request) {
-        List<String> argClassList = request.getClasses();
-        Class<?>[] argClasses = new Class<?>[argClassList.size()];
+        Class<?>[] argClasses = new Class<?>[request.getArgs().length];
         LOGGER.debug("converting arguments");
-        for (int i = 0; i < argClassList.size(); i++) {
-            try {
-                argClasses[i] = Class.forName(argClassList.get(i));
-            } catch (ClassNotFoundException e) {
-                return makeExceptionResult(new IllegalStateException(e));
-            }
+        for (int i = 0; i < argClasses.length; i++) {
+            argClasses[i] = request.getArgs()[i].getClass();
         }
         Method method;
         try {
-            LOGGER.debug("searching for method {} with args {}", request.getMethodName(), request.getClasses());
+            LOGGER.debug("searching for method {} with args {}", request.getMethodName(),
+                ArrayUtils.toString(argClasses));
             method = ExampleConnector.class.getMethod(request.getMethodName(), argClasses);
         } catch (NoSuchMethodException e) {
             return makeExceptionResult(e);
@@ -57,7 +53,6 @@ class RequestHandler {
             Object result = method.invoke(connector, request.getArgs());
             if (method.getReturnType().equals(void.class)) {
                 MethodResult methodResult = new MethodResult();
-                methodResult.setClassName(Object.class.getName());
                 methodResult.setType(ReturnType.Void);
                 return methodResult;
             }

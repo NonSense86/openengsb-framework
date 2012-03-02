@@ -39,12 +39,14 @@ import javax.jms.TemporaryQueue;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.openengsb.core.api.AliveState;
 import org.openengsb.core.api.model.OpenEngSBModelWrapper;
+import org.openengsb.core.api.remote.GenericObjectSerializer;
 import org.openengsb.core.api.remote.MethodResultMessage;
 import org.openengsb.core.api.remote.OutgoingPort;
 import org.openengsb.core.api.security.model.SecureResponse;
@@ -111,7 +113,7 @@ public class JMSPortIT extends AbstractRemoteTestHelper {
     @Test
     public void startSimpleWorkflow_ShouldReturn42() throws Exception {
         JmsTemplate template = prepareActiveMqConnection();
-        String secureRequest = prepareRequest(METHOD_CALL_STRING, "admin", "password");
+        String secureRequest = prepareRequest(MessageFormatIT.METHOD_CALL_STRING, "admin", "password");
         SecretKey sessionKey = generateSessionKey();
         String encryptedMessage = encryptMessage(secureRequest, sessionKey);
 
@@ -123,7 +125,7 @@ public class JMSPortIT extends AbstractRemoteTestHelper {
     @Test
     public void startSimpleWorkflowWithFilterMethodCall_ShouldReturn42() throws Exception {
         JmsTemplate template = prepareActiveMqConnection();
-        String secureRequest = prepareRequest(METHOD_CALL_STRING_FILTER, "admin", "password");
+        String secureRequest = prepareRequest(MessageFormatIT.METHOD_CALL_STRING_FILTER, "admin", "password");
         SecretKey sessionKey = generateSessionKey();
         String encryptedMessage = encryptMessage(secureRequest, sessionKey);
 
@@ -135,28 +137,36 @@ public class JMSPortIT extends AbstractRemoteTestHelper {
     @Test
     public void testSendMethodCallWithWrongAuthentication_shouldFail() throws Exception {
         JmsTemplate template = prepareActiveMqConnection();
-        String secureRequest = prepareRequest(METHOD_CALL_STRING, "admin", "wrong-password");
+        String secureRequest = prepareRequest(MessageFormatIT.METHOD_CALL_STRING, "admin", "wrong-password");
         SecretKey sessionKey = generateSessionKey();
         String encryptedMessage = encryptMessage(secureRequest, sessionKey);
 
         String result = sendMessage(template, encryptedMessage);
 
-        assertThat(result, containsString("Exception"));
-        assertThat(result, not(containsString("The answer to life the universe and everything")));
+        String decryptedResult = decryptResult(sessionKey, result);
+
+        ObjectMapper plainMapper = new ObjectMapper();
+        JsonNode resultTree = plainMapper.readTree(decryptedResult);
+        assertThat(resultTree.get("message").get("result").get("type").asText(), is("Exception"));
+        assertThat(resultTree.get("message").get("result").get("arg").get("@type").asText(),
+            containsString("AuthenticationException"));
+        assertThat(decryptedResult, not(containsString("The answer to life the universe and everything")));
     }
 
     @Test
     public void recordAuditInCoreService_ShouldReturnVoid() throws Exception {
         JmsTemplate template = prepareActiveMqConnection();
-        String secureRequest = prepareRequest(VOID_CALL_STRING, "admin", "password");
+        String secureRequest = prepareRequest(MessageFormatIT.VOID_CALL_STRING, "admin", "password");
         SecretKey sessionKey = generateSessionKey();
         String encryptedMessage = encryptMessage(secureRequest, sessionKey);
 
         String result = sendMessage(template, encryptedMessage);
         String decryptedResult = decryptResult(sessionKey, result);
 
-        assertThat(decryptedResult, containsString("\"type\":\"Void\""));
-        assertThat(decryptedResult, not(containsString("Exception")));
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseTree = objectMapper.readTree(decryptedResult);
+
+        assertThat(responseTree.get("message").get("result").get("type").asText(), is("Void"));
     }
 
     @Test
@@ -198,15 +208,15 @@ public class JMSPortIT extends AbstractRemoteTestHelper {
         getBundleContext().registerService(ExampleDomain.class.getName(), service, properties);
 
         JmsTemplate template = prepareActiveMqConnection();
-        String secureRequest = prepareRequest(METHOD_CALL_WITH_MODEL_PARAMETER, "admin", "password");
+        String secureRequest = prepareRequest(MessageFormatIT.METHOD_CALL_WITH_MODEL_PARAMETER, "admin", "password");
         SecretKey sessionKey = generateSessionKey();
         String encryptedMessage = encryptMessage(secureRequest, sessionKey);
 
         String result = sendMessage(template, encryptedMessage);
         String decryptedResult = decryptResult(sessionKey, result);
 
-        ObjectMapper mapper = new ObjectMapper();
-        SecureResponse response = mapper.readValue(decryptedResult, SecureResponse.class);
+        GenericObjectSerializer objectSerializer = getOsgiService(GenericObjectSerializer.class);
+        SecureResponse response = objectSerializer.parse(decryptedResult, SecureResponse.class);
         MethodResultMessage methodResult = response.getMessage();
         OpenEngSBModelWrapper wrapper = (OpenEngSBModelWrapper) methodResult.getResult().getArg();
         ExampleResponseModel model = (ExampleResponseModel) ModelUtils.generateModelOutOfWrapper(wrapper);
@@ -229,7 +239,7 @@ public class JMSPortIT extends AbstractRemoteTestHelper {
                 producer.send(message);
                 TextMessage response = (TextMessage) consumer.receive(1000);
                 assertThat("server should set the value of the correltion ID to the value of the received message id",
-                        response.getJMSCorrelationID(), is(message.getJMSMessageID()));
+                    response.getJMSCorrelationID(), is(message.getJMSMessageID()));
                 JmsUtils.closeMessageProducer(producer);
                 JmsUtils.closeMessageConsumer(consumer);
                 return response.getText();

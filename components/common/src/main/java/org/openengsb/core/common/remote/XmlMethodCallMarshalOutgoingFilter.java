@@ -17,6 +17,8 @@
 
 package org.openengsb.core.common.remote;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
@@ -27,12 +29,25 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.QName;
 import javax.xml.transform.dom.DOMResult;
 
+import org.openengsb.core.api.ClassloadingDelegate;
+import org.openengsb.core.api.OsgiUtilsService;
 import org.openengsb.core.api.remote.FilterAction;
 import org.openengsb.core.api.remote.FilterException;
+import org.openengsb.core.api.remote.MethodCall;
 import org.openengsb.core.api.remote.MethodCallRequest;
 import org.openengsb.core.api.remote.MethodResult;
 import org.openengsb.core.api.remote.MethodResultMessage;
+import org.openengsb.core.api.security.model.SecureRequest;
+import org.openengsb.core.api.security.model.SecureResponse;
+import org.openengsb.core.common.OpenEngSBCoreServices;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
+import com.sun.xml.bind.api.JAXBRIContext;
+
 
 /**
  * This filter takes a {@link MethodCallRequest} and serializes it into a {@link Document}. The document is then passed
@@ -52,17 +67,12 @@ import org.w3c.dom.Document;
 public class XmlMethodCallMarshalOutgoingFilter extends
         AbstractFilterChainElement<MethodCallRequest, MethodResultMessage> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(XmlMethodCallMarshalOutgoingFilter.class);
+
     private FilterAction next;
-    private Unmarshaller unmarshaller;
 
     public XmlMethodCallMarshalOutgoingFilter() {
         super(MethodCallRequest.class, MethodResultMessage.class);
-        try {
-            JAXBContext context = JAXBContext.newInstance(MethodCallRequest.class, MethodResultMessage.class);
-            unmarshaller = context.createUnmarshaller();
-        } catch (JAXBException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     @Override
@@ -90,14 +100,30 @@ public class XmlMethodCallMarshalOutgoingFilter extends
         return (Document) domResult.getNode();
     }
 
+    private Class<?>[] getAllClasses() {
+        OsgiUtilsService utilsService = OpenEngSBCoreServices.getServiceUtilsService();
+        Collection<Class<?>> result = Sets.newHashSet();
+        for (ClassloadingDelegate cl : utilsService.listServices(ClassloadingDelegate.class)) {
+            Collection<Class<?>> supportedTypes = cl.getSupportedTypes();
+            result.addAll(supportedTypes);
+        }
+        result.add(SecureRequest.class);
+        result.add(SecureResponse.class);
+        result.add(MethodCallRequest.class);
+        result.add(MethodResultMessage.class);
+        result.add(MethodCall.class);
+        result.add(MethodResult.class);
+        return result.toArray(new Class<?>[result.size()]);
+    }
+
     private MethodResultMessage parseMethodResult(Document input) throws JAXBException {
-        MethodResultMessage request = unmarshaller.unmarshal(input, MethodResultMessage.class).getValue();
-        MethodResult result = request.getResult();
-        JAXBContext jaxbContext = JAXBContext.newInstance(MethodResult.class); // resultClass
+        Class<?>[] allClasses = getAllClasses();
+        LOGGER.info(Arrays.toString(allClasses));
+        JAXBContext jaxbContext =
+            JAXBContext.newInstance(allClasses,
+                ImmutableMap.of(JAXBRIContext.ANNOTATION_READER, new CustomAnnotationReader()));
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-//        Object parsedArg = unmarshaller.unmarshal((Node) result.getArg()).getValue(); //resultClass
-//        result.setArg(parsedArg);
-        return request;
+        return unmarshaller.unmarshal(input, MethodResultMessage.class).getValue();
     }
 
     @Override

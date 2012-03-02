@@ -22,7 +22,9 @@ import java.util.Map;
 import org.apache.shiro.authc.AuthenticationException;
 import org.openengsb.core.api.remote.FilterAction;
 import org.openengsb.core.api.remote.FilterConfigurationException;
-import org.openengsb.core.api.remote.FilterException;
+import org.openengsb.core.api.remote.MethodResult;
+import org.openengsb.core.api.remote.MethodResult.ReturnType;
+import org.openengsb.core.api.remote.MethodResultMessage;
 import org.openengsb.core.api.security.model.AuthenticationToken;
 import org.openengsb.core.api.security.model.SecureRequest;
 import org.openengsb.core.api.security.model.SecureResponse;
@@ -71,7 +73,10 @@ public class MessageAuthenticatorFilter extends AbstractFilterChainElement<Secur
 
             SecurityContext.login((AuthenticationToken) input.getToken());
         } catch (AuthenticationException e) {
-            throw new FilterException(e);
+            MethodResult methodResult = new MethodResult(e, ReturnType.Exception);
+            MethodResultMessage methodResultMessage =
+                new MethodResultMessage(methodResult, input.getMessage().getCallId());
+            return SecureResponse.create(methodResultMessage);
         }
         LOGGER.debug("authenticated");
         return (SecureResponse) next.filter(input, metaData);

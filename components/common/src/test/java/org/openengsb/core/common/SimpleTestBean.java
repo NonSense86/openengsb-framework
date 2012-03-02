@@ -14,13 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.openengsb.core.api.security.model;
 
+package org.openengsb.core.common;
 
-public interface AuthenticationToken {
+public class SimpleTestBean {
+    String stringValue;
+    Long longValue;
 
-    Object getPrincipal();
+    public SimpleTestBean() {
+    }
 
-    Object getCredentials();
+    public SimpleTestBean(String stringValue, Long longValue) {
+        super();
+        this.stringValue = stringValue;
+        this.longValue = longValue;
+    }
 
+    public String getStringValue() {
+        return stringValue;
+    }
+
+    public void setStringValue(String stringValue) {
+        this.stringValue = stringValue;
+    }
+
+    public Long getLongValue() {
+        return longValue;
+    }
+
+    public void setLongValue(Long longValue) {
+        this.longValue = longValue;
+    }
 }
+

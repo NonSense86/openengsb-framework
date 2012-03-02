@@ -29,12 +29,13 @@ import org.openengsb.core.api.Constants;
 
 /**
  * Representation of a unique identification of connector instances.
- *
+ * 
  * A connector instance is identified by the name of the connector type, the name of the domain it represents and an
  * additional String-identifier
- *
+ * 
  */
 @SuppressWarnings("serial")
+@ShortTypeName("ConnectorId")
 @XmlRootElement
 public class ConnectorId implements Serializable {
 
@@ -99,7 +100,7 @@ public class ConnectorId implements Serializable {
 
     /**
      * generates a new unique ConnectorID for the given domain and connector.
-     *
+     * 
      * A {@link UUID} is used as unique string-identifier.
      */
     public static ConnectorId generate(String domainType, String connectorType) {
@@ -109,9 +110,9 @@ public class ConnectorId implements Serializable {
 
     /**
      * parses a connectorID from a string-representation of the format:
-     *
+     * 
      * "&lt;domainType&gt;+&lt;connectorType&gt;+&lt;instanceId&gt;"
-     *
+     * 
      * Example: "scm+git+projectx-main-repo"
      */
     public static ConnectorId fromFullId(String fullId) {
@@ -130,7 +131,7 @@ public class ConnectorId implements Serializable {
     /**
      * returns a string-representation of the ConnectorId for use with the service-registry. It is also used as
      * instanceId returned by {@link org.openengsb.core.api.OpenEngSBService#getInstanceId()}
-     *
+     * 
      * The resulting String can be parsed to a ConnectorId again using the {@link ConnectorId#parse} method
      */
     public String toFullID() {

@@ -25,7 +25,10 @@ import java.lang.reflect.InvocationTargetException;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.openengsb.core.api.model.ShortTypeName;
+
 @XmlRootElement
+@ShortTypeName("Event")
 public class Event {
     private String name;
     private Long processId;

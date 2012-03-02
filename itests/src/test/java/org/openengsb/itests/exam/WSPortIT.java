@@ -17,6 +17,7 @@
 
 package org.openengsb.itests.exam;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -39,8 +40,9 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.openengsb.core.api.remote.OutgoingPort;
@@ -72,7 +74,6 @@ public class WSPortIT extends AbstractRemoteTestHelper {
         waitForSiteToBeAvailable(WSDL_URL, MAX_SLEEP_TIME_IN_SECONDS);
     }
 
-    @Ignore
     @Test
     public void jmsPort_shouldBeExportedWithCorrectId() throws Exception {
         OutgoingPort serviceWithId =
@@ -80,12 +81,11 @@ public class WSPortIT extends AbstractRemoteTestHelper {
         assertNotNull(serviceWithId);
     }
 
-    @Ignore
     @Test
     public void startSimpleWorkflow_ShouldReturn42() throws Exception {
         Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
         Dispatch<DOMSource> dispatcher = createMessageDispatcher();
-        String secureRequest = prepareRequest(METHOD_CALL_STRING, "admin", "password");
+        String secureRequest = prepareRequest(MessageFormatIT.METHOD_CALL_STRING, "admin", "password");
         SecretKey sessionKey = generateSessionKey();
         String encryptedMessage = encryptMessage(secureRequest, sessionKey);
         DOMSource request = convertMessageToDomSource(encryptedMessage);
@@ -95,12 +95,12 @@ public class WSPortIT extends AbstractRemoteTestHelper {
 
         verifyEncryptedResult(sessionKey, result);
     }
-    @Ignore
+
     @Test
     public void startSimpleWorkflowWithFilterMethohdCall_ShouldReturn42() throws Exception {
         Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
         Dispatch<DOMSource> dispatcher = createMessageDispatcher();
-        String secureRequest = prepareRequest(METHOD_CALL_STRING_FILTER, "admin", "password");
+        String secureRequest = prepareRequest(MessageFormatIT.METHOD_CALL_STRING_FILTER, "admin", "password");
         SecretKey sessionKey = generateSessionKey();
         String encryptedMessage = encryptMessage(secureRequest, sessionKey);
         DOMSource request = convertMessageToDomSource(encryptedMessage);
@@ -110,12 +110,12 @@ public class WSPortIT extends AbstractRemoteTestHelper {
 
         verifyEncryptedResult(sessionKey, result);
     }
-    @Ignore
+
     @Test
     public void testSendMethodCallWithWrongAuthentication_shouldFail() throws Exception {
         Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
         Dispatch<DOMSource> dispatcher = createMessageDispatcher();
-        String secureRequest = prepareRequest(METHOD_CALL_STRING, "admin", "wrong-password");
+        String secureRequest = prepareRequest(MessageFormatIT.METHOD_CALL_STRING, "admin", "wrong-password");
         SecretKey sessionKey = generateSessionKey();
         String encryptedMessage = encryptMessage(secureRequest, sessionKey);
         DOMSource request = convertMessageToDomSource(encryptedMessage);
@@ -123,15 +123,21 @@ public class WSPortIT extends AbstractRemoteTestHelper {
         DOMSource response = dispatchMessage(dispatcher, request);
         String result = transformResponseToMessage(response);
 
-        assertThat(result, containsString("Exception"));
-        assertThat(result, not(containsString("The answer to life the universe and everything")));
+        String decryptedResult = decryptResult(sessionKey, result);
+
+        ObjectMapper plainMapper = new ObjectMapper();
+        JsonNode resultTree = plainMapper.readTree(decryptedResult);
+        assertThat(resultTree.get("message").get("result").get("type").asText(), is("Exception"));
+        assertThat(resultTree.get("message").get("result").get("arg").get("@type").asText(),
+            containsString("AuthenticationException"));
+        assertThat(decryptedResult, not(containsString("The answer to life the universe and everything")));
     }
 
     @Test
     public void recordAuditInCoreService_ShouldReturnVoid() throws Exception {
         Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
         Dispatch<DOMSource> dispatcher = createMessageDispatcher();
-        String secureRequest = prepareRequest(VOID_CALL_STRING, "admin", "password");
+        String secureRequest = prepareRequest(MessageFormatIT.VOID_CALL_STRING, "admin", "password");
         SecretKey sessionKey = generateSessionKey();
         String encryptedMessage = encryptMessage(secureRequest, sessionKey);
         DOMSource request = convertMessageToDomSource(encryptedMessage);
@@ -140,8 +146,10 @@ public class WSPortIT extends AbstractRemoteTestHelper {
         String result = transformResponseToMessage(response);
         String decryptedResult = decryptResult(sessionKey, result);
 
-        assertThat(decryptedResult, containsString("\"type\":\"Void\""));
-        assertThat(decryptedResult, not(containsString("Exception")));
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode responseTree = objectMapper.readTree(decryptedResult);
+
+        assertThat(responseTree.get("message").get("result").get("type").asText(), is("Void"));
     }
 
     private Dispatch<DOMSource> createMessageDispatcher() throws Exception {

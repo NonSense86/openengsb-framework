@@ -20,10 +20,10 @@ package org.openengsb.core.security.filter;
 import java.io.IOException;
 import java.util.Map;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.openengsb.core.api.remote.FilterAction;
 import org.openengsb.core.api.remote.FilterConfigurationException;
 import org.openengsb.core.api.remote.FilterException;
+import org.openengsb.core.api.remote.GenericObjectSerializer;
 import org.openengsb.core.api.security.model.SecureRequest;
 import org.openengsb.core.api.security.model.SecureResponse;
 import org.openengsb.core.common.remote.AbstractFilterChainElement;
@@ -51,10 +51,11 @@ public class JsonSecureRequestMarshallerFilter extends AbstractFilterChainElemen
 
     private FilterAction next;
 
-    private ObjectMapper mapper = new ObjectMapper().enableDefaultTyping();
+    private GenericObjectSerializer objectSerializer;
 
-    public JsonSecureRequestMarshallerFilter() {
+    public JsonSecureRequestMarshallerFilter(GenericObjectSerializer objectSerializer) {
         super(byte[].class, byte[].class);
+        this.objectSerializer = objectSerializer;
     }
 
     @Override
@@ -62,9 +63,7 @@ public class JsonSecureRequestMarshallerFilter extends AbstractFilterChainElemen
         SecureRequest request;
         try {
             LOGGER.trace("attempt to read SecureRequest from inputData");
-            System.out.println(new String(input));
-            
-            request = mapper.readValue(input, SecureRequest.class);
+            request = objectSerializer.parse(input, SecureRequest.class);
         } catch (IOException e) {
             throw new FilterException(e);
         }
@@ -72,10 +71,13 @@ public class JsonSecureRequestMarshallerFilter extends AbstractFilterChainElemen
         LOGGER.info("extracted callId \"{}\" from message", callId);
         metaData.put("callId", callId);
         LOGGER.debug("invoking next filter: {}", next.getClass().getName());
-        SecureResponse response = (SecureResponse) next.filter(request, metaData);
+        SecureResponse response;
+
+        response = (SecureResponse) next.filter(request, metaData);
+
         LOGGER.debug("response received for callId {}: {}. serializing to json", callId, response);
         try {
-            return mapper.writeValueAsBytes(response);
+            return objectSerializer.serializeToByteArray(response);
         } catch (IOException e) {
             throw new FilterException(e);
         }

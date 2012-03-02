@@ -156,7 +156,7 @@ public class RequestHandlerImpl implements RequestHandler {
 
     /**
      * TODO: OPENENGSB-1976
-     *
+     * 
      * This is a workaround for the mess with Aries JPA proxies.
      */
     private Class<?> retrieveRealServiceClass(Object service) {
@@ -179,8 +179,8 @@ public class RequestHandlerImpl implements RequestHandler {
 
     private Class<?>[] getArgTypes(MethodCall call) {
         Object[] args = call.getArgs();
-        Class<?>[] types = new Class<?>[args.length]; 
-        for(int i = 0; i <args.length; i++){
+        Class<?>[] types = new Class<?>[args.length];
+        for (int i = 0; i < args.length; i++) {
             types[i] = args[i].getClass();
         }
         return types;

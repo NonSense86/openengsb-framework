@@ -25,6 +25,7 @@ import org.apache.aries.blueprint.utils.BundleDelegatingClassLoader;
 import org.apache.commons.lang.StringUtils;
 import org.openengsb.core.api.ClassloadingDelegate;
 import org.openengsb.core.api.Constants;
+import org.openengsb.core.api.model.ShortTypeName;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
@@ -33,9 +34,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
 import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -119,15 +118,18 @@ public class DelegatedClassloaderManager {
 
     private ServiceRegistration doCreateDelegate(final Class<?> superClass, Set<Class<?>> providedClasses) {
         ClassloadingDelegate service = new ClassloadingDelegateImpl(providedClasses);
-        Collection<String> filteredNames = Collections2.transform(providedClasses, new Function<Class<?>, String>() {
-            @Override
-            public String apply(Class<?> input) {
-                return input.getName();
+        Set<String> providedNames = Sets.newHashSet();
+        for (Class<?> clazz : providedClasses) {
+            providedNames.add(clazz.getName());
+            ShortTypeName annotation = clazz.getAnnotation(ShortTypeName.class);
+            if (annotation != null) {
+                providedNames.add(annotation.value());
             }
-        });
+        }
+       
         Hashtable<String, Object> properties = new Hashtable<String, Object>();
         properties.put(Constants.PROVIDED_CLASSES_PARENTS_KEY, superClass.getName());
-        properties.put(Constants.PROVIDED_CLASSES_KEY, filteredNames);
+        properties.put(Constants.PROVIDED_CLASSES_KEY, providedNames);
         ServiceRegistration registration =
             bundleContext.registerService(ClassloadingDelegate.class.getName(), service,
                 properties);
@@ -160,12 +162,16 @@ public class DelegatedClassloaderManager {
 
     private Set<Class<?>> getProvidedClasses(Bundle b, String providesClasses) {
         Set<Class<?>> classes = Sets.newHashSet();
-        for (String className : StringUtils.split(providesClasses, ",")) {
+        for (String className : providesClasses.split("\\s*,\\s*")) {
+            String trimmedClassName = className.trim();
+            if (trimmedClassName.isEmpty()) {
+                continue;
+            }
             try {
-                classes.add(b.loadClass(className));
+                classes.add(b.loadClass(trimmedClassName));
             } catch (ClassNotFoundException e) {
                 LOGGER.error(String.format(
-                    "Could not load class %s during initializing ClassloadingDelegate for %s", className,
+                    "Could not load class %s during initializing ClassloadingDelegate for %s", trimmedClassName,
                     b.getSymbolicName()), e);
             }
         }

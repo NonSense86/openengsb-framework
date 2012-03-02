@@ -20,10 +20,10 @@ package org.openengsb.core.security.filter;
 import java.io.IOException;
 import java.util.Map;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.openengsb.core.api.remote.FilterAction;
 import org.openengsb.core.api.remote.FilterConfigurationException;
 import org.openengsb.core.api.remote.FilterException;
+import org.openengsb.core.api.remote.GenericObjectSerializer;
 import org.openengsb.core.api.security.model.SecureRequest;
 import org.openengsb.core.api.security.model.SecureResponse;
 import org.openengsb.core.common.remote.AbstractFilterChainElement;
@@ -51,10 +51,11 @@ public class JsonSecureRequestStringMarshallerFilter extends AbstractFilterChain
 
     private FilterAction next;
 
-    private ObjectMapper mapper = new ObjectMapper();
+    private GenericObjectSerializer objectSerializer;
 
-    public JsonSecureRequestStringMarshallerFilter() {
+    public JsonSecureRequestStringMarshallerFilter(GenericObjectSerializer objectSerializer) {
         super(String.class, String.class);
+        this.objectSerializer = objectSerializer;
     }
 
     @Override
@@ -62,7 +63,7 @@ public class JsonSecureRequestStringMarshallerFilter extends AbstractFilterChain
         SecureRequest request;
         try {
             LOGGER.trace("attempt to read SecureRequest from inputData");
-            request = mapper.readValue(input, SecureRequest.class);
+            request = objectSerializer.parse(input, SecureRequest.class);
         } catch (IOException e) {
             throw new FilterException(e);
         }
@@ -73,7 +74,7 @@ public class JsonSecureRequestStringMarshallerFilter extends AbstractFilterChain
         SecureResponse response = (SecureResponse) next.filter(request, metaData);
         LOGGER.debug("response received for callId {}: {}. serializing to json", callId, response);
         try {
-            return mapper.writeValueAsString(response);
+            return objectSerializer.serializeToString(response);
         } catch (IOException e) {
             throw new FilterException(e);
         }

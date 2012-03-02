@@ -17,30 +17,42 @@
 
 package org.openengsb.core.common.remote;
 
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.namespace.QName;
-import javax.xml.transform.dom.DOMResult;
 
+import org.openengsb.core.api.ClassloadingDelegate;
+import org.openengsb.core.api.OsgiUtilsService;
 import org.openengsb.core.api.remote.FilterAction;
 import org.openengsb.core.api.remote.FilterException;
 import org.openengsb.core.api.remote.MethodCall;
 import org.openengsb.core.api.remote.MethodCallRequest;
+import org.openengsb.core.api.remote.MethodResult;
 import org.openengsb.core.api.remote.MethodResultMessage;
-import org.w3c.dom.Document;
+import org.openengsb.core.api.security.model.SecureRequest;
+import org.openengsb.core.api.security.model.SecureResponse;
+import org.openengsb.core.common.OpenEngSBCoreServices;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
+import com.sun.xml.bind.api.JAXBRIContext;
 
 /**
- * This filter takes a {@link Document} representing a {@link MethodCallRequest} and deserializes it. The
+ * This filter takes a {@link org.w3c.dom.Document} representing a {@link MethodCallRequest} and deserializes it. The
  * MethodCallRequest is then passed to the next filter. The resulting {@link MethodResultMessage} is then seralized to
  * XML again and returned.
- *
+ * 
  * This filter is intended for incoming ports.
- *
+ * 
  * <code>
  * <pre>
  *      [org.w3c.dom.Document] > Filter > [MethodCallRequest]     > ...
@@ -50,23 +62,18 @@ import org.w3c.dom.Document;
  * </pre>
  * </code>
  */
-public class XmlMethodCallMarshalFilter extends AbstractFilterChainElement<Document, Document> {
+public class XmlMethodCallMarshalFilter extends AbstractFilterChainElement<String, String> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(XmlMethodCallMarshalFilter.class);
 
     private FilterAction next;
-    private Unmarshaller unmarshaller;
 
     public XmlMethodCallMarshalFilter() {
-        super(Document.class, Document.class);
-        try {
-            JAXBContext context = JAXBContext.newInstance(MethodCallRequest.class, MethodResultMessage.class);
-            unmarshaller = context.createUnmarshaller();
-        } catch (JAXBException e) {
-            throw new IllegalStateException(e);
-        }
+        super(String.class, String.class);
     }
 
     @Override
-    public Document doFilter(Document input, Map<String, Object> metadata) throws FilterException {
+    public String doFilter(String input, Map<String, Object> metadata) throws FilterException {
         MethodCallRequest call;
         try {
             call = parseMethodCall(input);
@@ -77,31 +84,49 @@ public class XmlMethodCallMarshalFilter extends AbstractFilterChainElement<Docum
         return serializeResult(result);
     }
 
-    private Document serializeResult(MethodResultMessage result) {
-        DOMResult domResult = new DOMResult();
+    private String serializeResult(MethodResultMessage result) {
+        Class<?>[] allClasses = getAllClasses();
+        LOGGER.info(Arrays.toString(allClasses));
+        StringWriter resultStringWriter;
         try {
             JAXBContext jaxbContext =
-                JAXBContext.newInstance(MethodResultMessage.class); // Class.forName(result.getResult().getClassName()
+                    JAXBContext.newInstance(allClasses,
+                        ImmutableMap.of(JAXBRIContext.ANNOTATION_READER, new CustomAnnotationReader()));
             Marshaller marshaller = jaxbContext.createMarshaller();
-            marshaller.marshal(new JAXBElement<MethodResultMessage>(
-                new QName(MethodResultMessage.class.getSimpleName()),
-                MethodResultMessage.class, result), domResult);
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            resultStringWriter = new StringWriter();
+            marshaller.marshal(result, resultStringWriter);
         } catch (JAXBException e) {
             throw new FilterException(e);
         }
-        return (Document) domResult.getNode();
+        return resultStringWriter.toString();
     }
 
-    private MethodCallRequest parseMethodCall(Document input) throws JAXBException {
-        MethodCallRequest request = unmarshaller.unmarshal(input, MethodCallRequest.class).getValue();
-        MethodCall result = request.getMethodCall();
-        JAXBContext jaxbContext = JAXBContext.newInstance(); // clazzes
+    private MethodCallRequest parseMethodCall(String input) throws JAXBException {
+        Class<?>[] allClasses = getAllClasses();
+        LOGGER.info(Arrays.toString(allClasses));
+        JAXBContext jaxbContext =
+                JAXBContext.newInstance(allClasses,
+                    ImmutableMap.of(JAXBRIContext.ANNOTATION_READER, new CustomAnnotationReader()));
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-//        Object[] args = result.getArgs();
-//        for (int i = 0; i < args.length; i++) {
-//            args[i] = unmarshaller.unmarshal((Node) args[i], clazzes[i]).getValue();
-//        }
+        MethodCallRequest request = (MethodCallRequest) unmarshaller.unmarshal(new StringReader(input));
         return request;
+    }
+
+    private Class<?>[] getAllClasses() {
+        OsgiUtilsService utilsService = OpenEngSBCoreServices.getServiceUtilsService();
+        Collection<Class<?>> result = Sets.newHashSet();
+        for (ClassloadingDelegate cl : utilsService.listServices(ClassloadingDelegate.class)) {
+            Collection<Class<?>> supportedTypes = cl.getSupportedTypes();
+            result.addAll(supportedTypes);
+        }
+        result.add(SecureRequest.class);
+        result.add(SecureResponse.class);
+        result.add(MethodCallRequest.class);
+        result.add(MethodResultMessage.class);
+        result.add(MethodCall.class);
+        result.add(MethodResult.class);
+        return result.toArray(new Class<?>[result.size()]);
     }
 
     @Override

@@ -17,6 +17,9 @@
 
 package org.openengsb.core.api.security.model;
 
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import org.openengsb.core.api.remote.MethodCallRequest;
 
 /**
@@ -24,11 +27,12 @@ import org.openengsb.core.api.remote.MethodCallRequest;
  * verification-information handled by {@link AbstractSecureMessage} and authenticationInformation.
  * 
  */
+@XmlRootElement
 public class SecureRequest extends AbstractSecureMessage<MethodCallRequest> {
 
     private static final long serialVersionUID = -2350090113804167120L;
 
-    private Object token;
+    private AuthenticationToken token;
 
     public static SecureRequest create(MethodCallRequest original, AuthenticationToken token) {
         SecureRequest secureRequest = new SecureRequest();
@@ -39,11 +43,12 @@ public class SecureRequest extends AbstractSecureMessage<MethodCallRequest> {
         return secureRequest;
     }
 
-    public Object getToken() {
+    @XmlAnyElement
+    public AuthenticationToken getToken() {
         return token;
     }
 
-    public void setToken(Object token) {
+    public void setToken(AuthenticationToken token) {
         this.token = token;
     }
 

@@ -102,6 +102,24 @@
           </instructions>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Provided-Classes>
+                org.openengsb.core.api.workflow.model.ProcessBag,
+                org.openengsb.core.api.Event,
+                org.openengsb.core.api.model.ConnectorId,
+                org.openengsb.core.api.model.ConnectorDescription,
+                org.openengsb.core.api.model.OpenEngSBModelWrapper
+              </Provided-Classes>
+              <Provided-ClassesParents>java.lang.Object</Provided-ClassesParents>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 

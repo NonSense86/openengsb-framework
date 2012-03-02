@@ -57,6 +57,8 @@
     </property>
   </bean>
 
+  <reference id="objectSerializer" interface="org.openengsb.core.api.remote.GenericObjectSerializer" />
+
   <bean id="incomingFilterChainFactory" class="org.openengsb.core.common.remote.FilterChainFactory">
     <property name="inputType" value="java.lang.String" />
     <property name="outputType" value="java.lang.String" />
@@ -67,7 +69,9 @@
           <property name="privateKeySource" ref="privateKeySource" />
           <property name="secretKeyAlgorithm" value="AES" />
         </bean>
-        <value>org.openengsb.core.security.filter.JsonSecureRequestMarshallerFilter</value>
+        <bean class="org.openengsb.core.security.filter.JsonSecureRequestMarshallerFilterFactory">
+          <property name="objectSerializer" ref="objectSerializer" />
+        </bean>
         <value>org.openengsb.core.security.filter.MessageVerifierFilter</value>
         <value>org.openengsb.core.security.filter.MessageAuthenticatorFilter</value>
         <value>org.openengsb.core.security.filter.WrapperFilter</value>
