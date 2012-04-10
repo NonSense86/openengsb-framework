@@ -18,15 +18,18 @@
 package org.openengsb.core.security.internal;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import com.google.common.base.Predicate;
 import org.openengsb.core.api.security.model.Permission;
 import org.openengsb.core.api.security.service.PermissionSetNotFoundException;
 import org.openengsb.core.api.security.service.UserDataManager;
@@ -144,24 +147,40 @@ public class UserDataManagerImpl implements UserDataManager {
         return getPermissionsFromSetData(user.getPermissionSet());
     }
 
+    public <T extends Permission>Collection<T> getPermissionsOfTypeForUser(String username, Class<T> type)
+            throws UserNotFoundException {
+        UserData user = doFindUser(username);
+        return getPermissionsOfTypeFromSetData(user.getPermissionSet(), type.getClass().getName());
+    }
+
     @Override
     public Collection<Permission> getAllPermissionsForUser(String username) throws UserNotFoundException {
         UserData user = doFindUser(username);
         return getAllPermissionsFromSetData(user.getPermissionSet());
     }
 
+    // TODO: Interface not extended at the moment
+    //@Override
+    public Collection<Permission> getAllPermissionsOfTypeForUser(String username, Class<? extends Permission> type)
+            throws UserNotFoundException {
+        UserData user = doFindUser(username);
+        return getAllPermissionsOfTypeFromSetData(user.getPermissionSet(), type);
+    }
+
     @Override
     public <T extends Permission> Collection<T> getPermissionsForUser(String username, Class<T> type)
         throws UserNotFoundException {
         // TODO improve performance with proper query.
-        return CollectionUtilsExtended.filterCollectionByClass(getPermissionsForUser(username), type);
+        //return CollectionUtilsExtended.filterCollectionByClass(getPermissionsForUser(username), type);
+        return getPermissionsOfTypeForUser(username, type);
     }
 
     @Override
     public <T extends Permission> Collection<T> getAllPermissionsForUser(String username, Class<T> type)
         throws UserNotFoundException {
         // TODO improve performance with proper query.
-        return CollectionUtilsExtended.filterCollectionByClass(getAllPermissionsForUser(username), type);
+        //return CollectionUtilsExtended.filterCollectionByClass(getAllPermissionsForUser(username), type);
+        return (Collection<T>) getAllPermissionsOfTypeForUser(username, type);
     }
 
     @Override
@@ -265,6 +284,13 @@ public class UserDataManagerImpl implements UserDataManager {
         return getAllPermissionsFromSetData(set);
     }
 
+    // TODO: Interface not extended at the moment
+    //@Override
+    public Collection<Permission> getAllPermissionsOfTypeFromPermissionSet(String permissionSet, Class<? extends Permission> type) {
+        PermissionSetData set = doFindPermissionSet(permissionSet);
+        return getAllPermissionsOfTypeFromSetData(set, type);
+    }
+
     @Override
     public void addPermissionToSet(String permissionSet, Permission... permission) {
         PermissionSetData set = doFindPermissionSet(permissionSet);
@@ -316,10 +342,28 @@ public class UserDataManagerImpl implements UserDataManager {
         return EntryUtils.convertAllBeanDataToObjects(data);
     }
 
+    private <T extends Permission>Collection<T> getPermissionsOfTypeFromSetData(PermissionSetData set, final String type) {
+        Collection<PermissionData> data = Collections2.filter(set.getPermissions(), new Predicate<PermissionData>() {
+            @Override
+            public boolean apply(@Nullable PermissionData permissionData) {
+                return permissionData.getType().equals(type);  //To change body of implemented methods use File | Settings | File Templates.
+            }
+        });
+        return EntryUtils.convertAllBeanDataToObjects(data);
+    }
+
     private Collection<Permission> getAllPermissionsFromSetData(PermissionSetData set) {
         Collection<Permission> result = Sets.newHashSet(getPermissionsFromSetData(set));
         for (PermissionSetData child : set.getPermissionSets()) {
             result.addAll(getAllPermissionsFromPermissionSet(child.getName()));
+        }
+        return result;
+    }
+
+    private Collection<Permission> getAllPermissionsOfTypeFromSetData(PermissionSetData set, Class<? extends Permission> type) {
+        Collection<Permission> result = Sets.newHashSet(getPermissionsOfTypeFromSetData(set, type.getClass().getName()));
+        for (PermissionSetData child : set.getPermissionSets()) {
+            result.addAll(getAllPermissionsOfTypeFromPermissionSet(child.getName(), type));
         }
         return result;
     }
